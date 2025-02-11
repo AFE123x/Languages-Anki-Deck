@@ -1,114 +1,239 @@
-## How would you read standard input from the user?
+## What are the five essential components to learning a language?
 
-```rs
-use std::io; //needed to io::stdin dependency
+- Syntax
+- Semantics
+- Idioms
+- Libraries
+- Tools
 
-fn main(){
-    println!("enter something");
-    let mut guess = String::new(); //creates a string type
+## What is Syntax?
 
-    io::stdin().read_line(&mut guess).expect("Failed to read line");
-    printnln!("You guessed {}",guess);
-}
-```
-- ```String::new()``` creates a new string type
-- ```io::stdin()``` actually reads you output:
-    - ```read_line(&mut guess)``` will read the input and store it in guess
-    - ```expect```, if read_line fails, will print out the message specified.
-        - If you don't use this, the compiler may warn you about it.
+- Syntax are the rules that constitutes a well-formed program in the language.
+    - THis includes things like keywords, restrictions on white space, operators, etc.
 
-## storing values with variables
 
-- unlike other languages, we don't need to specify the type in rust, the compiler can imply it:
+## What are semantics?
 
-```rs
-let guess = 5; //will declare variable 5
-let mut franny = 20; //will declare variable with 20
-```
-- immutable types cannot be modified
-- mutable types can be modified.
+- Semantics are the rules that define the basic behaviors of a program.
+- AKA, what does the program mean, what does the syntax represent?
 
-## What does the ``::`` mean?
+## What are the two pieces to semantics?
 
-```rs
-let mut guess = String::new();
-```
+- Dynamic semantics: run time behavior of a program as it's executed.
+- Static semantics: compile time checks that ensures the program is legal.
 
-- the ``::`` tells us that ``new()`` belongs to the new instance of String.
+## What are Idioms
 
-## What is a crate?
+- Idioms define the common approaches to using language features to express computation.
 
-- A crate is a collection of Rust source code files.
-- A Binary crate is an executable.
+## Libraries
 
-## How do we generate random numbers? What crate do we use?
+- Bundles of code that were written for you and will make you more productive.
 
-- We use the ``rand`` crate.
-- You can include it in the dependencies section of your toml file:
+## Tools
 
-```toml
-[dependencies]
-rand = "0.8.5"
+- Language implementations that provide a compiler or interpreter.
+- There are other Tools, like debuggers, IDEs, etc.
+
+## Types and Variables
+
+- We can define variables as such:
+
+```ocaml
+let x = 42;;
+let x: int = 42;; (* explicitly defines type*)
 ```
 
-- Version numbers vary.
+## Functions
 
-## What is the cargo.lock file?
+```ocaml
+let increment x = x + 1;;
 
-- The cargo lock file will ensure that, unless you explicitly change the dependency version, if someone else rebuilds it, it won't use a newer version, which may potentially break your program.
-
-## How to update crates
-
-you can use ```cargo update``` to update your crates.
-
-## How do you generate a random number between 1 and 100?
-
-```rs
-let secret_number = rand::random_range(0..=100);
+let y = increment 10;;
+print_int y;;
+print_newline();;
 ```
 
-- this will generate a secret_number such that $1 \leq \text{secret_number} \leq 100$.
+- Functions follow the following convention:
 
-## How can you view documentation based on your dependencies?
+```ocaml
+val increment: int -> int = <fun>
+```
+- increment is the identifier
+- int -> int is the return value and input
+- fun is the function itself.
 
-```rs
-cargo doc --open
+## recursive functions
+
+```ocaml
+let rec fact n =
+    if n = 0 then
+        1
+    else
+        n * fact (n-1)
+```
+- You need to specify `rec` when working with recursive stuff.
+
+## Function Types
+
+- OCaml convention is ```t1 -> t```
+    - In this example, a function takes in type t1, and returns type t
+
+## Modular code
+
+- If you want, you can specify the function in another file
+
+```ocaml
+(* mycode.ml *)
+let inc x = x + 1
 ```
 
-- This will open a page containing all the documentation you need for the dependencies in your program.
+```ocaml
+(* main.ml *)
+# #use "mycode.ml" (* This loads your code at the top level. *)
 
-## How could you convert a string into an integer?
-
-```rs
-let mut guess = String::new();
-io::stdin().read_line(&mut guess).expect("FAILED!");
-let guess: u32 = guess.trim().parse().expect("Enter a valid number");
+let x = inc 3;;
+print_int x;;
+print_newline();;
 ```
 
-- ```.parse()``` will convert your string to an int.
-- ```.expect()``` is for error handling.
+## how to compile ocaml code?
 
-## Make a rust program that generates a random number (make it run until you guess the number correctly)
-
-```rs
-use rand;
-use std::io;
-fn main() {
-    loop {
-        let y = rand::random_range(0..=100);
-        let mut guess = String::new();
-        io::stdin().read_line(&mut guess).expect("input reading FAILED!");
-        let result: u32 = guess.trim().parse().expect("Unable to parse");
-        if result == y{
-            println!("You guess correctly");
-            break;
-        }
-        else if result < y{
-            println!("{} < {}",result,y);
-        }
-        else{
-        println!("{} > {}",result,y);
-        }
-    }
-}
+```bash
+$ ocamlc -o hello hello.ml
+$ ./hello
 ```
+
+## Dune
+
+- Dune is a build system which will compile and link code for us.
+
+## Dune - how to compile and run
+
+```bash
+dune build #compiles your code
+dune run #compiles and runs code
+dune clean #cleans your code
+```
+
+## Dune - initialize project
+
+```bash
+dune init proj project_name
+```
+
+## running dune continuously
+
+```bash
+dune build --watch
+```
+
+## Assertions
+
+- Assertions are functions that takes a boolean expression. 
+    - if it's true, we good
+    - If it's false, the program terminates.
+
+```ocaml
+let () = assert (f input1 = output1)
+let () = assert (f input2 = output2)
+let () = assert (f input3 = output3)
+```
+
+## if expression
+
+- Conditional branching:
+
+```ocaml
+let x = if 3 + 5 > 2 then "yay!" else "boo!";;
+print_endline x;;
+
+```
+- `3 + 5 > 2` is true, so it prints "yay!"
+
+- We also have else-if
+
+```ocaml
+let x = if 3 + 5 < 2 then "yay!" 
+else if 3 + 5 > 2 then "naur!"
+else "boo!";;
+print_endline x;;
+```
+
+## let expression
+
+```ocaml
+let result = 
+  let x = 10 in  (* x is only accessible in this expression *)
+  x + 5          (* The expression evaluates to 15 *)
+in 
+print_int result;; (* prints 15 *)
+print_newline ();;
+```
+
+- This sets result equal to x where result = x + 5
+
+## Constructing Lists
+
+- `[]` depicts an empty list
+- `e1 :: e2` prepends an element e1 to list e2
+- `[e1 ; e2 ; ... ; en]` is the same as `e1::e1::...::en::[]`
+
+## Pattern matching
+
+- to pull lists apart, we use the `match` construct.
+
+```ocaml
+match e wth
+| p1 -> e1
+| ...
+| pn -> en
+```
+- p1..pn are patterns consisting of:
+    - `[]`
+    - `::`
+    - constants
+    - pattern variables
+- e1..en are branch expressions, which pattern variables in the corresponding pattern are bound.
+
+## pattern matching - wildcards
+
+- We can use `_` as a wildcard.
+
+```ocaml
+let describe_list lst =
+  match lst with
+  | [] -> "Empty list"
+  | [_] -> "Single element list"
+  | _ :: _ -> "A list with multiple elements"
+;;
+
+print_endline (describe_list []);;         (* Output: Empty list *)
+print_endline (describe_list [42]);;       (* Output: Single element list *)
+print_endline (describe_list [1; 2; 3]);;  (* Output: A list with multiple elements *)
+
+```
+
+## Pattern Matching - Shorthand
+
+```ocaml
+let hd (h::_) = h;
+```
+
+- this matches and gives the output
+- Only works for single conditions.
+
+## Pattern matching - recursion
+
+```ocaml
+let rec sum lst =
+  match lst with
+  | [] -> 0
+  | x :: xs -> x + sum xs
+
+(* Example usage *)
+let my_list = [1; 2; 3; 4]
+let total = sum my_list (* This will return 10 *)
+```
+
+## Scope

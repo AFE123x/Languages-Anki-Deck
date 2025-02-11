@@ -1,0 +1,9 @@
+playground/_build/
+playground/bin/main.cmi
+playground/bin/main.cmo
+playground/bin/main
+playground/bin/dune
+playground/dune-project
+playground/lib/
+playground/playground.opam
+playground/test/
