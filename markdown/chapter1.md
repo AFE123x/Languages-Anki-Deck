@@ -106,3 +106,79 @@
     - This delay depends on the link, and it's speed.
 
 - Propogation speed in the (distance between router A and B / propagation speed of the link.)
+
+## What's the difference between Transmission and Propagation Delay
+
+- Transmission delay is the time for the router to push out the packet.
+- Propagation delay is the time it takes to transport packets to the next router.
+
+## Traffic Intensity
+
+- Traffic Intensity is the ratio of the average rate at which packets arrive at a queue (La) to the transmission rate (R).
+    - We can say it's La/R.
+        - La is the average rate at which packets arrive at the queue.
+        - R is the transmission rate
+    - When La/R > 1, then the rate at which packets arrive at the queue exceeds tho rate bits are transmitted by the queue.
+    - If La/R is less than one, that means the nth packet will have a queueing delay of L/R
+    - If La/R is zero, there's no queueing delay. 
+
+## Packet Loss
+
+- The router queue is limited in number of packets it can hold. If the queue is full, the router drops the packet.
+
+## Throughput
+
+- Throuput is the rate that bits are being sent from the sender to receiver.
+    - Can be instantaneous, or average overtime
+
+![alt text](image.png)
+
+- If the link capacities differ, we call the smaller link a bottleneck link. 
+
+## Layering
+
+- When we send data over a network, we need to wrap it into layers, then, when the data reaches the destination, the destination unwraps the data. 
+
+- Why do we need layering?
+    - Explicit structure allows identification and distinctions of system pieces.
+    - Modularization eases maintenance and updating of systems.
+
+## Layered Internet Protocol Stack
+
+```
++-------------+
+| application | <- application: HTTP, IMAP
++-------------+
+|  transport  | <- transport: TCP, UDP
++-------------+
+|   network   | <- network: IP, Routing protocols
++-------------+
+|    link     | <- link: Ethernet, 802.11, Wifi
++-------------+
+|  physical   | <- The physical hardware. 
++-------------+
+```
+
+## Encapsulation
+
+- When we send data, we encapsulate the data into it's physical representation. Some links don't need to fully unwrap the data, may just need the link.
+- The destination will fully unwrap, and get the message for the application.
+
+## IP Sniffing
+
+- IP Sniffing are network interfaces that can read a packet sent from another computer
+
+![](image-1.png)
+
+- Wire shark is an example of a wire sniffer
+
+## IP Spoofing
+
+- A spoofer sends a fake packet, with the illusion that it's sent from another source. 
+
+![alt text](image-2.png)
+
+## DoS Attacks
+
+- These are Denial of Service Attacks
+    - Intentionally send requests to a server overwhelming it. 
