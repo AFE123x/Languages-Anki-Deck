@@ -181,4 +181,5 @@
 ## DoS Attacks
 
 - These are Denial of Service Attacks
-    - Intentionally send requests to a server overwhelming it. 
+    - Intentionally send requests to a server overwhelming it.
+
