@@ -239,4 +239,4 @@ void synchronize_irq(unsigned int irq);
 
 - `irqs_disabled()` checks if the interrupt system on the local processor is disabled. It returns nonzero if it is, returns zero if it isn't.
 - `in_interrupt()` returns nonzero if the kernel is performance any type of interrupt handling.
-- `in_irq()` returns non zero only if the kernel is specifically executing an interrupt handler.
+- `in_irq()` returns non zero only if the kernel is specifically executing an interrupt handle≈r.3
