@@ -1,109 +1,280 @@
-# 2. Getting Started with the Kernel
+# 2. Learning About Toolchains
 
-## linux kernel - make utilities
+## What is a toolchain? Typical GNU toolchain setup
+
+- A toolchain is the set of tools that compiles source code into an executable, which you can then run on you target device.
+    - This will include the compiler, linker and run-time library.
+
+- The compiler, linker and runtime library are needed to build the three elements of the linux system:
+    - The bootloader
+    - kernel
+    - root filesystem.
+
+### Typical GNU toolchain setup
+
+- binutils: set of binary utilities including the assembler and linker.
+- GNU Compiler Collection (GCC)
+- C library: a standard API based on the posix specifications.
+- kernel headers.
+- GDB: A popular type of debugger
+
+
+## Types of toolchains
+
+- There are two types of toolchains:
+    - native: The toolchain runs on the same type of system as the programs it generates
+        - For example, creating an x86 application on an x86 device
+    - cross: this toolchain runs on a different system then the target, allowing development to be done on a regular PC, then loaded on the target device for testing:
+        - example, compiling code on a x86 machine for an stm32
+
+
+## Deciding on a toolchain - CPU Architecture, compiler prefix
+
+- When you select a toolchain, you need to consider:
+    - CPU Architecture: ARM, MIPS, x86-64, etc.
+    - Big/little endian operations
+    - floating point support
+    - Application Binary Interface (ABI): how arguments are conventionally passed into functions (rdi, rsi, etc.)
+
+
+### Compiler Prefix
+
+- GNU uses a convention when adding a prefix to the tools
 
 ```bash
-make config #goes through each option, you can select yes or no.
-make menuconfig #opens menu where you can choose features to add.
-make gconfig #similar to menuconfig, but it's a gui.
-make defconfig #makes config based on current config.
-make oldconnfig #will update the existing configuration file.
+<cpu>-<vendor>-<kernel>-<operatng system>
+```
+- The CPU is the architecture
+- Vendor is the provider of the toolchain
+- kernel is the OS (typicall linux here)
+- operating system: could be the ABI, or something like gnu or musl.
+
+```bash
+gcc -dempmachine
+```
+- You can figure out the prefix by writing this command.
+
+
+## Choosing the C Library, options
+
+- There's a standard that IEEE established known as the POSIX standard.
+- The C library is the implementation of that interface.
+
+### Options
+
+- glibc: This is the standard GNU C library.
+    - It's big and most complete implementation of the POSIX API, but it's not very configurable.
+- musl libc: newer library, great for systems with limited amount of RAM and storage.
+- uClibc-ng (micro libc-ng): This was originally a microcontroller C library, made to work with micro linux. It now works with full linux.
+- eglibc: eglibc is obsolete
+
+## crosstool-NG
+
+- This is a popular utility made to create a toolchain from source.
+- To use it, you need to clone it from their repositary, and install it using make and stuff.
+
+```bash
+$ git clone https://github.com/crosstool-ng/crosstool-ng.git
+$ cd crosstool-ng
+$ git checkout crosstool-ng-1.22.0
+$ ./bootstrap
+$ ./configure --enable-local
+$ make
+$ make install
+```
+### Using crosstool-NG
+
+- To see the default configuration for a device, you can add show before the prefix (arm-none-linux-gnueabi for example)
+
+```bash
+$ ./ct-ng show-arm-cortex_a8-linux-gnueabi
+[L..] arm-cortex_a8-linux-gnueabi
+ OS : linux-4.3
+ Companion libs : gmp-6.0.0a mpfr-3.1.3 mpc-1.0.3 libelf-0.8.13 expat-2.1.0
+ ncurses-6.0
+ binutils : binutils-2.25.1
+ C compilers : gcc | 5.2.0
+ Languages : C,C++
+ C library : glibc-2.22 (threads: nptl)
+ Tools : dmalloc-5.5.2 duma-2_5_15 gdb-7.10 ltrace-0.7.3 strace-4.10
 ```
 
-## Kernel space - libc
+### Actually creating toolchain
 
-- In kernel space, you don't have access to standard C functions, like `printf()`. 
-- In kernel space, there's `printk()` that works similarly.
+- To create the toolchain, you can run ct-ng with the architecture you want
+
+```bash
+./ct-ng arm-cortex_a8-linux-gnueabi
+./ct-ng menuconfig #lets you configure the buildtool.
+./ct-ng build #when you're ready, you can build it
+```
+
+## Using toolchain
+
+- After installing, you can use the toolchain.
+
+### gcc cross compiler
+
+- You can compile c code like normal, but with a slight difference:
+    - you add the prefix
+
+```bash
+arm-cortex_a8-linux-gnueabi-gcc -o hello helloworld.c
+
+arm-cortex_a8-linux-gnueabihf-gcc --target-help # will list out the architecture specific options available.
+```
+
+## sysroot, library, and header files
+
+- sysroot is a directory that contains subdirectories for libraries, header files and configuration files.
+- You can get the sysroot directory by adding `-print-sysroot` in addition to gcc
 
 ```c
-printk(KERN_ERR "this is an error!\n");
+arm-cortex_a8-linux-anueabihf-gcc -print-sysroot
 ```
 
-- KERN_ERR difenise a priority flag.
+- The sysroot contains the following:
+    - lib: Contains .so files
+    - usr/lib: contains static library files
+    - usr/include: contains header for libraries
+    - usr/bin contains utility programs that run on the target
+    - usr/share, used for localization
+    - sbin: provides ldconfig utilities. 
 
 
-## C Inline functions
+## Components of the C library
 
-- Inline functions remove the overhead of function calls (pushing PC on stack, etc.)
-- We make inline functions with the inline keyword
+- libc: main C library containing POSIX functions
+- libm: Contains the math functions.
+- libpthread: Contains all the posix thread functions
+- librt: realtime extensions to posix, including shared memory and asynchronous I/O
+
+- By default, libc is always linked in. If you want to use anything else, you need to explicitly link it
+
+```bash
+arm-cortex_a8-linux-gnueabihf-gcc -o hello hello.c -lm
+```
+
+- You can use readelf to figure out what libraries are linked in. 
+
+```bash
+arm-cortex_a8-linux-gnueabihf-readelf -a program_name
+```
+
+## Linking libraries: Static and Dynamic Linking
+
+- static libraries are linked during compile time.
+- dynamic libraries are linked during run time.
+
+## Static Libraries
+
+- Static libraries are linked during compile time.
+- Static linking is useful if you need to run a program before the filesystem that holds the runtime libraries are available.
+- The consequence is that the binaries will be bigger in size.
+
+- Static libraries have the `.a` file format.
+
+## Creating Static library
+
+- You can create a static library with the ar utility:
+
+```bash
+gcc -c test.c
+ar rcs libtest.a test1.o test2.o
+```
+- r means insert/replace file
+- c means to create the archive
+- s means to add an index (which helps the linker find the symbol.)
+
+
+- You can then link it with 
+
+```bash
+$ arm-cortex_a8-linux-gnueabihf-gcc helloworld.c -ltest -L../libs -I../libs -o helloworld
+```
+- `-ltest` tells the linker that there's a library named `libtest.a`
+- `-L ../libs` tells libtest.a is located in the `../libs` directory.
+- `-I ../libs` tells the compiler where te find the header files
+
+## Shared libraries
+
+- Share objects can be linked at runtime.
+    - This is more efficient for storage and memory, since we only need to load one copy of the code.
+    - This also means that we'll only have to load one copy of the code when running.
+
+```bash
+gcc -fPIC -c test1.c
+gcc -shared -o test1.so test1.o
+```
+
+- `-fPIC` specifies that you want **Position-Independent Code**
+    - This means the library can be loaded at any memory address.
+- `-shared` indicates that the linker should make a shared object file.
+
+- to compile with the shared library:
 
 ```c
-// utils.h
-static inline int max(int a, int b) {
-    return (a > b) ? a : b;
-}
+$ arm-cortex_a8-linux-gnueabihf-gcc helloworld.c -ltest -L../libs -I../libs -o helloworld
+```
+- It's the same idea, except the linking will happen by the dynamic linker.
+
+## Makefiles
+
+- Some packages are trivial to compile, including the linux kernel, U-Boot bootloader, and BusyBox
+- when you compile with make, you can specify you want to cross compile it using the CROSS_COMPILE variable
+
+```bash
+make CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf-
 ```
 
-- Inline functions, unlike macros, are preferred for type safety and readability.
+## Autotools
 
-## Inline Assembly
+- Autotool is a group of tools that are used as the build system.
+- Examples include:
+    - GNU Autoconf
+    - GNU Automake
+    - GNU Libtool
+    - Gnulib
 
-- The C compiler embeds assembly instructions in a normal C function.
-- the `asm` directive is used to write inline assembly code.
+- The autotool smoothes the difference between the different types of systems the package may've been compiled for. This accounts for different compiler versions, libraries, different location of header files and dependencies with other packages.
+- Packages that use autotool will come with a script named configure that checks for dependencies and generate a makefile based on what it finds.
 
-```c
-unsigned int low, high;
-asm volatile("rdtsc" : "=a" (low), "=d" (high));
-/* low and high now contain the lower and upper 32-bits of the 64-bit tsc */
+```bash
+./configure
+make
+sudo make install
 ```
 
-- Inline assembly is used for low level architecture stuff, and allow for fast path code. 
+- You can set shell variables to influence the behavior of the script:
+    - CC: C compiler command
+    - CFLAG: Additional C compiler flags
+    - LDFLAGS: Additional linker flags, you can add `-L<lib dir>`
+    - LIBS: additional libraries to link, `-lm` for example
+    - `CPPFLAGS` Preprocessor flags
+    - `CPP` c preprocessors to use.
 
-## Branch Annotation
-
-- The C compiler has built in directives that optimizes conditional branches based on it's liklihood of being taken.
-- The kernel provides two macros: `likely()` and `unlikely()`
-
-```c
-/* we predict 'error' is nearly always zero ... */
-if (unlikely(error)) {
-/* ... */
-}
-/* we predict 'success' is nearly always nonzero ... */
-if (likely(success)) {
-/* ... */
-}
+```bash
+CC=arm-cortex_a8-linux-gnueabihf-gcc ./configure
 ```
 
-- You should only use these if you know the liklihood of each if statement being executed.
+- Sometimes it'll fail. Fortunately, the autotool will give insight on how to solve it.
 
+- When you call configure, you need to specify three devices:
+    - Build computer is the one buliding the package.
+    - Host: The computer the program runs on.
+    - Target is the one that the compiler will generate code for.
 
-## Memory Protection
+```bash
+CC=arm-cortex_a8-linux-gnueabihf-gcc ./configure --host=arm-cortex_a8-linux-gnueabihf
+```
 
-- In user space, it's easy to implement memory protection (SIGSEGV)
-- In kernel space, the stakes are higher.
-    - In kernel space, you shouldn't make illegal memory accesses, like dereferencing a NULL pointer. 
-- Kernel memory is not pageable, so every byte of memory you use is one less byte of available physical memory.
+## Package Configuration
 
-## Floating Point in kernel space
+- There's a utility known as `pkg-config`, which helps track what packages are installed, and which compile flags are needed.
 
-- When a user space process uses floating-point instruction, the kernel handles the transition from integer to floating point mode.
-    - The way it handles floating point varies by architecture, but it normally catches a trap and initiates the transition from integer to floating point mode.
-- The kernel doesn't have this luxury, since it cannot easily trap itself. 
-    - Therefore, you need to manually save and restore the floating point registers on top of other things.
+```
+pkg-config <package> --libs --cflags
+```
 
-- therefore, **unless necessary, don't use floating point operations in the kernel**.
-
-## Stack size in kernel space.
-
-- In user space, its easy to resize the stack.
-- The kernel stack is not large nor dynamic, rather, it's small and fixed in size.
-
-## Preemptive vs Non-Preemptive 
-
-- Preemptive, the scheduler will interrupt the process when switching
-- Non-Preemptive, the scheduler will wait for the process to complete or perform I/O before switching.
-
-## Synchronization and Concurrency
-
-- The Kernel allows for concurrent access of shared resources, requiring synchronization to prevent race conditions.
-- The linux kernel is preemptive, so the scheduler can easily choose to take control, which could result in two threads accessing the same resource.
-- Interrupt handlers can occur in the midst of accessing a resource, and the handler can get the same resource as a result.
-
-- Solutions include using spinlocks and semaphores.
-
-## Importance of portability - linux
-
-- Linux is a portable operating system.
-    - Therefore, the architecture independent C code must correctly compile and run on a wide range of systems. 
-- There are multiple rules, like maintaining endian neutral.
+- We can get all the needed cflags for compiling a program with a particular package.
+- If you're using a cross compiled library, you need to export the pkgconfig path as the `PKG_CONFIG_LIBDIR`.
