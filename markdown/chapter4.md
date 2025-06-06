@@ -1,132 +1,173 @@
-# 4. Configuring and Building the Kernel
+# 4. Lists
 
-## What does the kernel do?
+## List data type, length of array
 
-- The kernel has three main jobs:
-    - manage resources
-    - interface with hardware
-    - provide an API to offer a useful level of abstraction to user space programs.
-        - You have user space and kernel space utilities.
-        - For example, c library is userspace
-        - Syscall handlers and device drivers are kernel space.
+- The list is a value that contains multiple values in an ordered sequence.
 
-## Userspace vs. Kernel space 
+```py
+spam = ['cat', 'bat', 'fish', 'elephant']
+print(spam[0]) # prints 'cat'
+print(spam[1]) # prints 'bat'
+print(spam[2]) # prints 'fish'
+print(spam[3]) # prints 'elephant'
+print(spam[-1]) # prints 'elephant'
+```
+- One quirk is you can use negative indices on items. It just wraps around.
+### getting length
 
-- In userspace, you run at a lower CPU Priviledge level.
-    - This means you can do very little beside make library calls.
-- Kernel space runs at a higher CPU priviledge level.
-    - When you invoke a system call, the kernel will invoke a trap/interrupt to elevate itself into kernel mode.
-- The C standard library is the interface between user and kernel space.
+- You can get the length of an array using `len()`
 
-## Linux Kernel development cycle
+## list type - Slices
 
-- Linux is fast paced, with newer versions coming out ever 8-12 weeks.
-- Linus Torvalds manages the development kernel tree, and you can clone the repository.
-- the kernel development cycle occurs in window of 2 weeks.
-    - Here, linus will accept merges.
-- After this phase, the stabilization phase begins, where he produce weekly release condidates.
-- you can keey track of changes on linux kernel newbie.
+- A slice is a new list containing a part of the original array.
+    - slices are formated as `arr[start index: end bounds]`
+```py
+spam = ['cat', 'bat', 'rat', 'elephant']
 
-## KConfig
+new_spam = spam[1:3] # ['bat', 'rat'] doesn't include rat
 
-- You can customize linux to fit whatever needs you have.
-- There's a configuration mechanism known as **KConfig.
-    - **KConfig** is integrated with a build system known as **Kbuild**.
+print(spam[:2]) #prints ['cat', 'bat']
+print(spam[1:]) # prints ['bat', 'rat', 'elephant']
+```
+- You can omit the start or end indexes.
 
-- You can choose configuration options using a heirarchy of files named as Kconfig.
+## List Concatenation and List Replications
 
-- The top config looks like:
+- Similar to strings, you can use the `+` operator to combine two arrays
+- Similar to strings, you can use the `*` operator to replicate an array
 
-```cs
-mainmenu "Linux/$ARCH $KERNELVERSION Kernel Configuration"
-    config SRCARCH
-        string
-        option env="SRCARCH"
-source "arch/$SRCARCH/Kconfig" //brings in other Kconfig files
+```py
+>>> [1, 2, 3] + ['A', 'B', 'C']
+[1,2,3,'A', 'B', 'C']
+>>> ['X', 'Y', 'Z'] * 3
+['X', 'Y', 'Z','X', 'Y', 'Z','X', 'Y', 'Z']
 ```
 
-- `arch/$SRCARCH/Kconfig` brings in another Kconfig file, which is architecture dependent.
+## Removing/adding items from list
 
-- Kconfig files consist mostly of menus, with the menu and endmenu keyword.
-- Menu items are denoted with `config`
+### removing elements from list
+- You can remove values from a list using the `del` statement
 
-```cs
-
-menu "Character devices"
-[...]
-config DEVMEM
-bool "/dev/mem virtual device support"
-default y
-help
-Say Y here if you want to support the /dev/mem device.
-The /dev/mem device is used to access areas of physical
-memory.
-When in doubt, say "Y".
-[...]
-endmenu
-```
-- There are multiple ways to classify options
-    - `bool` tells us that the option is a enabled or disable tag.
-    - `tristate`: yes, no, or compile it as a module
-    - `int`: an integer with decimal notation
-    - `hex`: an unsigned integer value using hexadecimal notation
-    - `string`: a string value
-
-- There are many utilities that read these Kcofig files, then produce the .config file.
-
-## linux make utilities
-
-```zsh
-make ARCH=arm menuconfig
+```py
+>>> spam = ['cat', 'bat', 'rat', 'elephant']
+>>> del spam[2] # deletes 'rat' from list.
+>>> spam
+['cat', 'bat', 'elephant']
+>>> spam.remove('cat') # will remove element from array.
 ```
 
-- This will provide an entire tui menu with all the configurations provided by the KConfig files
+### adding items to list with append and insert
 
-
-## Kernel Modules
-
-- Kernel modules aren't super useful in embedded, as the hardware and kernel configuration is already known at compile time.
-
-- There are only a few cases where kernel modules are a good idea:
-    - you're developing proprietary modules, for licensing reasons
-    - reduce boot time deferring non-essential drivers later.
-    - There are a number of drivers that are better loaded, as compiling them would cost too much memory.
-
-
-## Finding out which kernel target to build
-
-- This heavily depends on what your bootloader expects:
-    - U-boot usually requires uImage, but can use zImage or bootz
-    - x86 uses bzImage file
-    - Most other bootloaders: use zImage file
-
-to build a zImage file, you run the comand:
-
+```py
+>>> spam = ['cat', 'dog', 'bat']
+>>> spam.append('moose')
+>>> spam
+['cat', 'dog', 'bat', 'moose']
+>>> spam = ['cat', 'dog', 'bat']
+>>> spam.insert(1, 'chicken')
+>>> spam
+['cat', 'chicken', 'dog', 'bat']
 ```
-make -j 4 ARCH=arm CROSS_COMPILE=arm-cortex_a8-linux-gnueabihf- zImage
-```
+- append will add an item to the end of the list
+- insert will add the element at a specific index.
 
-- uImage is a kernel format used by U-Boot (legacy, with a special header).
+## Checking if item is in list
 
-- When you build a uImage using mkimage, it requires a fixed load address (e.g., LOADADDR=0x80008000).
+- you can you the `in` keyword to see if an item is in the list
 
-- Different SoCs have different physical memory start addresses (e g., one might start at 0x80000000, another at 0x40000000).
-
-- The kernel is typically relocated to 0x8000 bytes from the start of RAM (e.g., 0x80008000 if RAM starts at 0x80000000).
-
-- Multi-platform kernels don’t have a single fixed load address, which conflicts with the uImage requirement.
-
-## Compiling device trees and modules
-
-```bash
-make ARCH=arm dtbs # compiles device tree
-make modules # compile modules
+```py
+>>> 'howdy' in ['hello', 'hi', 'howdy', 'heyas']
+True
+>>> spam = ['hello', 'hi', 'howdy', 'heyas']
+>>> 'cat' in spam
+False
+>>> 'howdy' not in spam
+False
+>>> 'cat' not in spam
+True
 ```
 
-## Early user space
+## Augmented assignment operations
 
-- To transition from kernel initialization to user space:
-    - The kernel mounts a root filesystem, then executes a program in said filesystem.
-    - This is done via a ram disk, or mounting a real filesystem on a block device.
-    - The kernel starts it's first thread, with PID 1, and runs it.
+- You can do augmented operations on variables
 
+| old way | augmented way |
+| --- | --- |
+| `spam = spam + 1` | `spam += 1` |
+| `spam = spam - 1` | `spam -= 1` |
+| `spam = spam * 1` | `spam *= 1` |
+| `spam = spam / 1` | `spam /= 1` |
+| `spam = spam % 1` | `spam %= 1` |
+
+
+## Methods
+
+- the method is similar to a function, but is associated with an instance of a variable.
+
+```py
+>>> spam = ['hello', 'hi', 'howdy', 'heyas']
+>>> spam.index('hello')
+0
+>>> spam.index('heyas')
+3
+>>> spam.index('howdy howdy howdy')
+Traceback (most recent call last):
+    File "<pyshell#31>", line 1, in <module>
+        spam.index('howdy howdy howdy')
+ValueError: 'howdy howdy howdy' is not in list
+```
+
+
+### array, sorting values
+
+- You can sort items in a list using `.sort()`
+
+```py
+>>> spam = [2, 5, 3.14, 1, -7]
+>>> spam.sort()
+>>> spam
+[-7, 1, 2, 3.14, 5]
+>>> spam.sort(reverse=True) # you want it in reverse order
+>>> spam
+[5, 3.14, 2, 1, -7]
+```
+
+## tuples, converting between list and tuple
+
+```py
+eggs = ('hello', 42, 0.5)
+>>>eggs[0]
+'hello'
+```
+- Tuples let you hold different types.
+- The difference is that tuples are immutable, so you cannot modify them.
+
+- you can convert between lists and tuples
+
+```py
+>>> tuple(['cat', 'dog', 5])
+('cat', 'dog', 5)
+>>> list(('cat', 'dog', 5))
+['cat', 'dog', 5]
+>>> list('hello')
+['h', 'e', 'l', 'l', 'o']
+```
+
+### copy and deepcopy functions
+
+- When you pass an array or tuple in a function, it'll be passed in as a reference.
+    - Therefore, it'll change the original array.
+- This is where `copy()` and `deepcopy()` functions come in.
+
+
+```py
+>>> import copy
+>>> spam = ['A', 'B', 'C', 'D']
+>>> cheese = copy.copy(spam)
+>>> cheese[1] = 42
+>>> spam
+['A', 'B', 'C', 'D']
+>>> cheese
+['A', 42, 'C', 'D']
+```
+- Deepcopy works similarly, but recursively copies the contents inside (for example, the items in the list are arrays too!)
