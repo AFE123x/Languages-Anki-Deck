@@ -300,4 +300,49 @@ daemon:x:1:1:daemon:/usr/sbin:/bin/false
     - `udev`: mainstream version of mdev, flexible and good for higher end embedded devices. It's a part of systemd.
 
 
-**continue at network components for glibc**
+## Creating filesystems images with device tables
+
+- You can create the initramfs using a device table. 
+- this is great for creating device nodes without being root.
+
+- Embedded developers also want to:
+    - customize device nodes and permissions
+    - create images for ext2, jiffs2, and ubifs filesystem
+    - build rootfs without sudo.
+
+
+- There are many filesystem tools that support device tables
+    - For example:
+        - `mkfs.jpps2`, commonly used for raw flash memory
+        - `mfks.ubifs`, used for NAND flash
+        - `genext2fs`, used for SD cards, MMC, managed flash.
+
+
+## device table format
+
+```
+<name> <type> <mode> <uid> <gid> <major> <minor> <start> <inc> <count>
+```
+- name is the path of the file `/dev/null`
+- type is for the type of device:
+    - f for file
+    - d for directory
+    - c for character device
+    - b for block device
+    - p for pipe
+- mode is the file permission (755, 666)
+- uid, gid is the user and group id
+- major and minor are device numbers
+- start, inc, count: For creating multiple device nodes in sequence.
+
+## Creating image from staging directory and device table
+
+```bash
+genext2fs -b 4096 -d rootfs -D device-table.txt -U rootfs.ext2
+```
+
+- `-b 4096` is the size of the image in bytes
+- `-d rootfs` is the staging area, that contains `/bin`, `/etc`, and `/dev` files
+- `-D device-table.txt` is the path to the device table file
+- `-U` preserves UID and GID
+- `rootfs.ext2` is the output file
