@@ -1,0 +1,226 @@
+\documentclass{article}
+\title{Differential Equations - Notes}
+\author{Arun Felix}
+\begin{document}
+\maketitle
+\tableofcontents
+\newpage
+\part{Basic Concepts}
+\section{Definitions}
+
+\subsection{What is a differential equation?}
+
+\begin{itemize}
+    \item A differential equation is an equation that contains derivatives, either ordinary or partial derivatives
+    \item A popular example is newtons second law of motion, $F = ma$
+    \item This is a differential equation since $a = \frac{dv}{dt}$
+    \item Given this, we can actually write Newton's second law as a differential equation: $m \frac{dv}{dt} = F(t,v)$
+\end{itemize}
+
+\subsection{What is Order?}
+
+\begin{itemize}
+    \item The order is the largest derivative present in the differential equation.
+    \item For example, $\frac{\partial ^3 u}{\partial x^2 \partial t} = 1 + \frac{\partial u}{\partial y}$ is a third order differential equation since it's greatest derivative is 3.
+\end{itemize}
+
+\subsection{Ordinary vs. Partial Differential Equation}
+
+\begin{itemize}
+    \item An ordinary differential equation only has original differential equations, ode.
+    \item A partial differential equation will have partial derivatives in it.
+\end{itemize}
+
+\subsection{Linear Differential Equation}
+
+A linear differential equation is a differential equation following the form:
+
+\begin{center}
+    $a_n (t) y^{(n)}(t) + a_{n - 1} (t) y^{(n-1)} + ... + a_1 (t) y' (t) + a_0 (t) y (t) = g(t)$ 
+\end{center}
+
+\subsection{Initial Conditions}
+
+An initial condition allows us to determine which solution we're after. For example, $y(t_0) = y_0$ or $y^{(k)}(t_0) = y_k$.
+
+\subsection{Implicit vs. Explicit Solutions}
+
+An implicit solution is a solution given in the form of $y = y(t)$ \\
+An explicit solution is a solution that isn't implicit. 
+
+\part{First Order Differential Equations}
+\section{Linear Differential Equations}
+\subsection{Introduction}
+A linear first order differential equation is an equation in the form:
+
+\begin{center}
+    $\frac{dy}{dt} + p(t)y = g(t)$
+\end{center}
+
+\begin{itemize}
+    \item Here, we can assume $p(t)$ and $g(t)$ are continuous.
+\end{itemize}
+
+Now, let's assume the existence of a variable, $\mu (t)$, where we multiple all factors by it
+
+\begin{center}
+    $\mu(t)\frac{dy}{dt} + \mu(t)p(t)y = \mu(t)g(t)$
+\end{center}
+
+To solve problems using this:
+\begin{itemize}
+    \item Put the differential equation in the correct form above.
+    \item Find the integrating factor, $\mu (t)$, where $\mu (t) = e^{\int p(t) dt}$
+    \item Multiply everything in the differential equation with $\mu (t)$, and verify the leftside becomes the product rule, $(\mu(t) y(t))'$.
+    \item Integrate both sides.
+    \item Solve for $y(t)$.
+\end{itemize}
+
+\subsection{Example 1}
+
+Let's try to find the solution to the following differential equation:
+
+\begin{center}
+    $\frac{dv}{dt} = 9.8 - 0.196v$
+\end{center}
+
+We can see that we need to put the equation into linear form. 
+
+\begin{center}
+    $\frac{dv}{dt} + 0.196v = 9.8$
+\end{center}
+
+Let's solve for $\mu (t)$
+
+\begin{center}
+    $\mu (t) = e^{\int 0.196 dt} = e^{0.196t}$
+\end{center}
+
+Next, we can plug in $\mu (t)$ in all variables
+
+\begin{center}
+    $e^{0.196t}\frac{dv}{dt} + e^{0.196t} 0.196v = 9.8e^{0.196t}$
+\end{center}
+
+We can rearrange some numbers:
+
+\begin{center}
+    $e^{0.196t}\frac{dv}{dt} +  0.196e^{0.196t}v = 9.8e^{0.196t}$
+\end{center}
+
+this resembles the product rule, hence we can say:
+
+\begin{center}
+    $(e^{0.196t} v)' = 9.8e^{0.196t}$
+\end{center}
+
+Now, we can integrate:
+
+\begin{center}
+    $\int(e^{0.196t} v)' dt = \int9.8e^{0.196t} dt$
+\end{center}
+
+\begin{center}
+    $e^{0.196t} v = 9.8\int e^{0.196t}dt$ 
+\end{center}
+
+for the right equation, we can use u sub
+
+\begin{center}
+    $e^{u} dt$, where $u = 0.196t$, $du = 0.196dt$, and $dt = \frac{du}{0.196}$
+\end{center}
+
+We can plug this into our equation
+
+\begin{center}
+    $e^{0.196t} v + k = 9.8 \cdot \frac{1}{0.196} \int e^{u} du$ \\
+    $e^{0.196t} v + k = 50 \int e^{u} du$ \\
+    $e^{0.196t} v + k = 50 e^{0.196t} + c$
+\end{center}
+
+Finally, we can solve for y, or v in this context:
+
+\begin{center}
+    $ v = \frac{50 e^{0.196t} + c}{e^{0.196t}}$
+\end{center}
+
+\section{Separable Equations}
+\subsection{Introduction}
+A seperable differential equation is an equation where you can separate the variables:
+\begin{center}
+    $N(y) \frac{dy}{dx} = M(x)$
+\end{center}
+
+To put it simply, all the ys need to be on one side, xs on the other. To solve such a differential equation, you'd integrate both sides.
+
+\begin{center}
+    $\int N(y) \frac{dy}{dx} dx = \int M(x) dx$
+\end{center}
+
+We can use substitution to get this instead:
+
+\begin{center}
+    $\int N(u) du = \int M(x) dx$
+\end{center}
+
+\subsection{Example}
+
+Solve the following differential equation and determine the interval of validity for the solution.
+
+\begin{center}
+$\frac{dy}{dx} = 6y^2 x$, and $y(1) = \frac{1}{25}$
+\end{center}
+
+The first step is seperating the Xs and Ys
+
+\begin{center}
+    $dx \cdot \frac{dy}{dx} = 6y^2 x \cdot dx$ \\ 
+    $\frac{dy}{y^2} = \frac{6y^2 x \cdot dx}{y^2}$ \\
+    $\frac{1}{y^2} dy = 6x dx$
+\end{center}
+
+From here, we can do integration:
+
+\begin{center}
+    $\int \frac{1}{y^2} dy = \int 6x dx$ \\
+    $\int y^{-2} dy = 3x^2 + C$ \\
+    $-y^{-1} = 3x^2 + C$ \\
+    $-\frac{1}{y} = 3x^2 + C$
+\end{center}
+
+now, we can solve for y:
+
+\begin{center}
+    $y = \frac{1}{3x^2 + C}$
+\end{center}
+
+Finally, we can solve for C to get our differential equation. This is trivial, as we have $y(1) = \frac{1}{25}$
+
+\begin{center}
+    $\frac{1}{25} = \frac{1}{3 + C}$
+\end{center}
+
+We can easily figure out that $C = 22$.
+
+Hence our final differential equation is:
+
+\begin{center}
+    $y = \frac{1}{3x^2 + 22}$
+\end{center}
+
+
+\section{Exact Equations}
+
+\section{Bernoulli Differential Equation}
+
+\section{Substitutions}
+
+\section{Intervals of Validity}
+
+\section{Modeling with First Order Differential Equations}
+
+\section{Equilibrium Solutions}
+
+\section{Euler's Method}
+\end{document}
+

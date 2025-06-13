@@ -2,3 +2,9 @@ playground/
 books/
 .vscode/
 kernel/
+diffnotes.aux
+diffnotes.fdb_latexmk
+diffnotes.fls
+diffnotes.log
+diffnotes.synctex.gz
+diffnotes.toc
