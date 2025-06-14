@@ -210,17 +210,339 @@ Hence our final differential equation is:
 
 
 \section{Exact Equations}
+\subsection{Introduction}
+An exact equation follows the form: $M(x,y) + N(x,y) \frac{dy}{dx} = 0$
+
+Let's create two variables:
+
+\begin{itemize}
+    \item $\psi_x = M(x,y)$
+    \item $\psi_y = N(x,y)$
+\end{itemize}
+
+Plugging it into our equation, we get:
+
+\begin{center}
+$\psi_x + \phi_y \frac{dy}{dx} = 0$
+\end{center}
+
+We can then use the chain rule to find the derivative of the differential equation:
+
+\begin{center}
+    $\frac{d}{dx} (\psi (x,y(x))) = 0$
+\end{center}
+this gives us an implicit solution: $\psi(x,y) = c$.
+
+\subsection{What is a exact equation}
+
+An exact equation is an equation, given $M_y$ and $N_x$, if their partial derivatives are equal to eachother.
+
+\subsection{Example}
+
+Solve the following IVP and find the interval of validity for the solution
+
+$2xy - 9x^2 + (2y + x^2 + 1)\frac{dy}{dx} = 0$, where $y(0) = -3$.
+
+\begin{itemize}
+    \item We can set two variables.
+    \item $M(x,y) = 2xy - 9x^2$
+    \item $N(x,y) = 2y + x^2 + 1$
+\end{itemize}
+
+The first thing we can do is check if this is an exact equation:
+
+\begin{center}
+    $\frac{\partial M}{\partial y} = 2x$ \\
+    $\frac{\partial N}{\partial x} = 2x$
+\end{center}
+
+We can see the partial derivatives are identical, hence it's an exact equation.
+
+Next, we need to integrate one of the equations:
+
+\begin{center}
+    $\int M(x,y) = \int 2xy - 9x^2 dx = x^2 y - 3x^3 + h(y) $
+\end{center}
+
+Notice how, instead of a constant, we use $h(y)$.
+
+We actually have $h'(y)$, it's $N = 2y + x^2 + 1$.
+
+Now, we find $\frac{\partial M}{\partial y}$ the integral of M, giving us $x^2 + h'(y)$
+
+We can set $\frac{\partial M}{\partial y} = M$, or $x^2 + h'(y) = 2y + x^2 + 1$.
+
+\begin{center}
+    $x^2 + h'(y) - x^2 = 2y + x^2 + 1 - x^2$ \\
+    $h'(y) = 2y + 1$
+\end{center}
+
+We can integrate $h'(y)$ to get $h(y)$.
+
+\begin{center}
+    $\int 2y + 1 dy = y^2 + y + k$
+\end{center}
+
+We can plug this into our equation:
+
+\begin{center}
+    $\psi (x,y) = x^2 y - 3x^3 + y^2 + y + k$
+\end{center}
+
+Now, we need to solve for k, or c
+
+\begin{center}
+    $\psi (x,y) = x^2 y - 3x^3 + y^2 + y + k = c$ \\
+    $\psi (x,y) = x^2 y - 3x^3 + y^2 + y + k - k = c - k$ \\
+    $\psi (x,y) = x^2 y - 3x^3 + y^2 + y = c$ \\
+    $\psi (x,y) = x^2 y - 3x^3 + y^2 + y = c$ Here, we use $y(0) = -3$ \\
+    $\psi (x,y) = (0)^2 (-3) - 3(0)^3 + (-3)^2 + (-3) = c$ Here, we use $y(0) = -3$ \\
+    $\psi (x,y) = 9 -3 = c$, where $c = 6$ \\
+    hence our solution is $\psi (x,y) = x^2 y - 3x^3 + y^2 + y - 6 = 0$ \\
+\end{center}
 
 \section{Bernoulli Differential Equation}
+\subsection{Introduction}
+Bernoulli Equations are equations that follow the form:
+
+\begin{center}
+    $y' + p(x)y = q(x)y^n$
+\end{center}
+
+Here, we assume $p(x)$ and $q(x)$ are continuous functions, and n is a number.
+
+if n = 0 or 1, we'll have a linear equation, which is easy to solve.
+
+if n isn't 0 or 1, we need to divide both sides by $y^n$, substitute $v = y^{1 - n}$. Once we do this, we'll get a linear equation we can solve.
+
+\subsection{Example}
+
+Solve the following IVP and find the interval of validity for the solution:
+
+\begin{center}
+    $y' + \frac{4}{x} y = x^3 y^2$, where $y(2) = -1$ and $x > 0$
+\end{center}
+
+We can see our differential equation resembles the bernoulli equation, where:
+
+\begin{itemize}
+    \item $p(x) = \frac{4}{x}$
+    \item $q(x) = x^3$
+    \item $n = 2$
+\end{itemize}
+
+now, we need to divide both sides by $y^n$
+
+\begin{center}
+    $\frac{y' + \frac{4}{x} y}{y^2} = \frac{x^3 y^2}{y^2}$ \\
+    $\frac{y' + \frac{4}{x} y}{y^2} = \frac{x^3 y^2}{y^2}$ \\
+    $y^{-2} y' + \frac{4}{x} y^{-1} = x^3$
+\end{center}
+
+
+From here, we can substitute, using $v = y^{1 - n} = y^{1 - 2} = y^{-1}$ and $v' = -y^{-2} y'$, giving us:
+
+\begin{center}
+    $-v' + \frac{4}{x} v = x^3$
+\end{center}
+
+Because $\frac{dv}{dt}$ needs to be positive, we need to multiply both sides by $-1$ to get:
+
+\begin{center}
+    $v' - \frac{4}{x} v = -x^3$ \\
+\end{center}
+
+Next, we need to multiply all variables by $\mu(x)$
+
+\begin{center}
+    $\mu(x)v' - \mu(x)\frac{4}{x} v = -\mu(x)x^3$ \\
+\end{center}
+
+next, we need to find $\mu(x)$
+
+$\mu(x) = e^{\int -\frac{4}{x} = -4\int\frac{1}{x} = -4 ln |x| \rightarrow ln|x^{-4}} = x^{-4}$
+
+We can plug this in to get
+
+\begin{center}
+    $x^{-4}v' - x^{-4}\frac{4}{x} v = -x^{-4}x^3$ = $-x^4v' - 4x^{-5}v = -x^{-1}$ \\
+\end{center}
+
+You can see that this resembles the product rule, hence we can simplify this equation to:
+
+$-x^{-4}x^3$ = $-x^4v' - 4x^{-5}v = (x^{-4}v)'$
+
+We can then integrate:
+
+\begin{center}
+    $\int (x^{-4}v)' = \int -x^{-1}dx$ \\
+    $x^{-4}v = -ln|x| + c$ \\
+    $v(x) = cx^4 - x^4 ln x$, or $v = cx^4 - x^4 ln x$
+\end{center}
+
+We can then solve for c by using the condition $y(2) = -1$. We can also plug $y^-1 back in$
+
+\begin{center}
+    $y^{-1} = cx^4 - x^4 ln x$ \\
+    $-1^{-1} = c2^4 - 2^4 ln 2$ \\
+    $-1 + 16 ln 2 = 16c - 16 ln 2 + 16 ln 2$ \\
+    $\frac{-1 + 16 ln 2 }{16}= \frac{16c}{16}$
+    $c = \frac{-1 + 16ln 2}{16}$
+
+\end{center}
+
+We can solve for y, bla bla bla. 
 
 \section{Substitutions}
+\subsection{Introduction}
 
+In addition to Bernoulli's Differential equation, there's also another one known as homogenous differential equations.
+\subsubsection{Homogenous equations}
+
+Homogenous equations are equations that take the form:
+
+\begin{center}
+    $y' = F(\frac{y}{x})$
+\end{center}
+
+If this is the case, we can use the following substitutions:
+
+\begin{center}
+    $v = \frac{y}{x}$, which can be written as $y = xv$\\
+    $y' = v + xv'$
+\end{center}
+
+using this will give us a separable differential equation, which we can easily solve. 
+
+\paragraph{Example}
+
+Solve the following IVP and find the interval of validity for the solution:
+
+\begin{center}
+    $xyy' + 4x^2 + y^2 = 0$, where $y(2) = -7$ and $x > 0$
+\end{center}
+
+We can move $4x^2 + y^2$ to the other side of the equation, giving us:
+
+\begin{center}
+    $xyy' = -4x^2 - y^2$
+\end{center}
+
+we can then divide both sides by two:
+
+\begin{center}
+    $\frac{y}{x} y' = -4 - \frac{y^2}{x^2} = -4 - (\frac{y}{x})^2$
+\end{center}
+Hence, we proved our equation here is homogenous.  Next, we can apply the substitution here.
+
+\begin{center}
+    $v(v + xv') = -4 - v^2$
+\end{center}
+
+We can then separate variables, then use integration to solve our differential equation.
+
+\begin{center}
+    $\int \frac{v}{2v^2} dv = \int -\frac{1}{x}dx$
+\end{center}
+
+\subsubsection{Other equation}
+
+If you have a differential equation with the form: $y' = G(ax + by)$, then you can apply the following substitution:
+
+\begin{center}
+    $v = ax + by$ \\
+    $v' = a + by'$
+\end{center}
 \section{Intervals of Validity}
+\subsection{Theorem one}
+When it comes to intervals of validity, there's an important idea:
 
-\section{Modeling with First Order Differential Equations}
+\begin{center}
+    $y' + p(t)y = g(t)$, where $y(t_0) = y_0$
+\end{center}
 
-\section{Equilibrium Solutions}
+If $p(t)$ and $g(t)$ are continuous functions on an open interval $\alpha < t < \beta$, containing an interval $t_0$, then there's a unique solution to the IVP on the interval.
 
-\section{Euler's Method}
+\subsubsection{Example}
+Let's try to determine the intervals of validity for the following initial value problem.
+
+\begin{center}
+    $(t^2 - 9)y' + 2y = ln|20 - 4t|$, where $y(4) = -3$
+\end{center}
+
+Let's start off by dividing both sides by $(t^2 - 9)$, giving us:
+
+\begin{center}
+    $y' + \frac{2}{t^2 - 9} y = \frac{ln|20 - 4t|}{t^2 - 9}$
+\end{center}
+
+In order to find non continuous intervals, we need to find points that aren't defined. In this example, dividing by zero, or if you get $ln|0|$.
+
+\begin{center}
+    $20 - 4t = 0 \rightarrow t = 5$ \\
+    $t^2 - 9 = 0 \rightarrow (t - 3)(t + 3) = 0 \rightarrow t = \pm 3$
+\end{center}
+
+hence, our Intervals of Validity include:
+
+\begin{center}
+    $-\infty < t < -3, -3 < t < 3, 3 < t <  5, 5 < t < \infty$
+\end{center}
+
+\subsection{Theorem 2}
+
+Let's consider the following IVP:
+
+\begin{center}
+    $y' = f(t,y)$, where $y(t_0) = y_0$
+\end{center}
+
+if $f(t,y)$ and $\frac{\partial f}{\partial y}$ are continious functions in some rectangle $\alpha < t < \beta$, and $\gamma  < y < \delta$, containing the point $(t_0,y_0)$, then there's a unique solution to the IVP in some interval $t_0 - h < t < t_0 + h$
+
+\subsubsection{Example}
+
+Determine the interval of validity for the initial value problem below and give its dependence on the value of $y_0$
+
+\begin{center}
+    $y' = y^2$, where $y(0) = y_0$
+\end{center}
+
+Here, we can define the variables:
+
+\begin{itemize}
+    \item $f(t,y) = y^2$
+    \item $t_0 = 0$
+    \item $y_0$ is the initial value.
+\end{itemize}
+
+We first need to check for continuity for $f(t,y)$ and $\frac{\partial f}{\partial y}$
+\begin{itemize}
+    \item $f(t,y) = y^2$ is continuous
+    \item $\frac{\partial f}{\partial y} = 2y$, which is also continuous.
+\end{itemize}
+
+Our equation also contains the point $(t_0,y_0)$, so we're good. we can now 
+
+now, we can work on this:
+
+\begin{center}
+    $\frac{dy}{dt} = y^2$ \\
+    $dy = y^2 dt$\\
+    $\frac{1}{y^2} dy = dt$ \\
+    $\int \frac{1}{y^2} dy = \int dt$ \\
+    $-\frac{1}{y} = t + c$
+\end{center}
+
+We're given $y(0) = y_0$, so we can figure out c with it.
+
+\begin{center}
+    $- \frac{1}{y_0} = c$
+\end{center}
+
+therefore, our solution is $-\frac{1}{y} = t - \frac{1}{y_0}$.
+
+We can rearrange the variables to get $y = \frac{y_0}{1 - y_0 t}$
+
+We can then find out that y is undefined when $t = \frac{1}{y_0}$.
 \end{document}
 
