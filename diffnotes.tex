@@ -544,5 +544,354 @@ therefore, our solution is $-\frac{1}{y} = t - \frac{1}{y_0}$.
 We can rearrange the variables to get $y = \frac{y_0}{1 - y_0 t}$
 
 We can then find out that y is undefined when $t = \frac{1}{y_0}$.
+
+\part{Second Order Differential Equations}
+
+\section{Basic Concepts}
+
+\subsection{Second order linear differential equation}
+The most general linear order differential equation follows the form:
+
+\begin{center}
+    $P(t)y'' + q(t)y' + r(t)y = g(t)$
+\end{center}
+
+If we were to assume constant coefficient, we can use the following:
+
+\begin{center}
+    $ay'' + by' + cy = g(t)$
+\end{center}
+
+\subsection{Homogenous vs. nonhomogenous differential equations}
+
+Given the form, $ay'' + by' + cy = g(t)$:
+\begin{itemize}
+    \item we say a differential equation is homogenous if $g(t) = 0$
+    \item Otherwise, if $g(t) \neq 0$, it's nonhomogenous.
+\end{itemize}
+
+\subsubsection{Example}
+
+Determine some solutions to $y'' - 9y = 0$
+
+We can bring 9y to the other side:
+
+\begin{center}
+    $y'' = 9y$
+\end{center}
+
+\begin{itemize}
+    \item This tells us $y''$ needs to be the original function times 9.
+    \item Right off the bat, we can think of using e.
+    \item more specifically, $y = e^{\pm 3t}$
+\end{itemize}
+
+We can test this:
+
+\begin{center}
+    $y = e^{3t}$ \\
+    $y' = 3e^{3t}$ \\
+    $y'' = 9e^{3t}$ \\
+\end{center}
+
+since $y = e^{3t}$, we can say $y'' = 9y$ 
+
+\subsection{Principle of Superposition}
+
+If $y_1 (t)$ and $y_2 (t)$ are solutions to a linear, homogenous differential equation, we can also say $y(t) = c_1 y_1 (t) + c_2 y_2 (t)$ is a solution to our differential equation. \textbf{This is true regardless of order}, applies to any homogenous linear differential equation.
+
+Another important question to ask is, how do we find the constants, $c_1$ and $c_2$? We simply just specify values of the solutions at two distinct points.
+
+\subsubsection{Example}
+
+Solve the following IVP
+
+\begin{center}
+    $9'' - 9y = 0$, where $y(0) = 2$ and $y'(0) = -1$
+\end{center}
+
+\begin{itemize}
+    \item We solved y in the first part, it's $e^{\pm 3t}$
+    \item Let's plug it in: $y(t) = c_1 e^{3t} + c_2 e^{-3t}$
+    \item next, we can figure out the derivative of $y(t)$
+    \begin{itemize}
+        \item $y'(t) = 3c_1 e^{3t} - 3c_2 e^{-3t}$
+    \end{itemize}
+    \item We can plug in our initial conditions:
+    \begin{itemize}
+        \item $2 = c_1 + c_2$, which is $y(0)$
+        \item $-1 = 3c_1 - 3c_2$, which is $y'(0)$
+    \end{itemize}
+    \item We can use gaussian elimination to find the t$c_1 = \frac{5}{6}$ and $c_2 = \frac{7}{6}$
+    \item Plugging everything in, we can find that our differential equation is $y(t) = \frac{5}{6} e^{3t} + \frac{7}{6} e^{-3t}$
+\end{itemize}
+
+\subsection{Characteristic equations}
+
+\begin{itemize}
+    \item We can notice that the equations above resembled $y(t) = e^{rt}$.
+    \item How can we solve without guessing?
+\end{itemize}
+
+\subsubsection{Example}
+
+Let's do the $y'' - 9y = 0$
+
+Let's first calcule y, which we'll say is $y(t) = e^rt$
+
+\begin{itemize}
+    \item $y(t) = e^{rt}$
+    \item $y'(t) = re^{rt}$
+    \item $y''(t) = r^2e^{rt}$
+\end{itemize}
+
+We can plug these into our equation:
+
+\begin{center}
+    $r^2 e^{rt} - 9e^{rt} = 0$
+\end{center}
+
+from here, we can bring the $e^{rt}$ out the equation:
+
+\begin{center}
+    $e^{rt}(r^2 - 9) = 0$
+\end{center}
+
+\begin{itemize}
+    \item $r^2 - 9$ is known as a \textbf{characteristic equation}.
+    \item Based on this, we can deduce that, in order for the equation to be equal to zero, $r^2 - 9 = 0$. We can use easy algebra to find that $r = 3$, and $r = -3$.
+\end{itemize}
+
+\subsection{Real \& distinct roots}
+
+Let's think about our characteristic equation:
+
+\begin{center}
+    $ar^2 + br + c = 0$
+\end{center}
+
+and the two solutions: $y_1(t) = e^{r_1 t}$ and $y_2(t) = e^{r_2 t}$
+\begin{itemize}
+    \item We say that the roots, $r_1$ and $r_2$ are real and distinct, if the two are real numbers and $r_1 \neq r_2$.
+    \item If this is true, then the two solutions are \textbf{nice enough} to form the solution: $y(t) = c_1 e^{r_1 t} + c_2 e^{r_2 t}$
+\end{itemize}
+
+\subsubsection{Example}
+
+Solve the following IVP:
+
+\begin{center}
+    $y'' + 11y' + 24y = 0$, given $y(0) = 0$, and $y'(0) = -7$.
+\end{center}
+
+Let's use $y = e^{rt}$
+
+\begin{center}
+    $y = e^{rt}$ \\
+    $y' = re^{rt}$ \\
+    $y'' = r^2 e^{rt}$
+\end{center}
+
+Let's plugs these in our equation:
+
+\begin{center}
+    $r^2 e^{rt} + 11re^{rt} + 24e^{rt} = 0$ \\
+    $e^{rt}(r^2 + 11r + 24) = 0$ \\
+    $r^2 + 11r + 24 = 0$ \\
+    $(r + 8)(r + 3) = 0$ \\
+    therefore, $r = -8$ and $r = -3$, which are real numbers and distinct.
+\end{center}
+
+we can now come up with the following equations:
+
+\begin{center}
+    $y(t) = c_1 e^{-3t} + c_2 e^{-8t}$ \\
+    $y'(t) = -3c_1^{-3t} - 8c_2 e^{-8t}$
+\end{center}
+
+We can use gaussian elimination to solve for the constants. Our final answer is $y(t) = -\frac{7}{5}e^{-3t} + \frac{7}{5} e^{-8t}$
+
+\subsection{Complex Roots}
+\subsubsection{Introduction}
+
+Let's again, look at solutions to the differential equations following the form:
+
+\begin{center}
+    $ay'' + by' + cy = 0$ \\
+    $ar^2 + br + c = 0$
+\end{center}
+
+We call roots \textbf{complex roots}, if they have the form $r_{1,2} = \lambda \pm \mu i$.
+
+Assuming we're using the two differential equations, $y(t) = e^{rt}$, we say that our solutions to the differential equation is: 
+
+\begin{center}
+    $y_1 (t) = e^{(\lambda + \mu i) t}$ \\
+    $y_1 (t) = e^{(\lambda - \mu i) t}$
+\end{center}
+
+Having complex roots is great, but it's ideal for our solution to only have real numbers. we use \textbf{Euler's formula} for this:
+
+\begin{center}
+    $e^{i\theta} = cos\theta + isin\theta$
+\end{center}
+
+We can use another variant:
+
+\begin{center}
+    $e^{-i\theta} = cos(-\theta) + isin(-\theta) = cos\theta - isin\theta$
+\end{center}
+
+We can now split our exponent into two groups:
+
+\begin{center}
+    $y_1(t) = e^{\lambda t + \mu i t} = e^{\lambda t} e^{\mu i t }$
+    $y_2(t) = e^{\lambda t - \mu i t} = e^{\lambda t} e^{-\mu i t }$
+\end{center}
+
+We have our equation from above, which we can use:
+
+\begin{center}
+    $y_1(t) = e^{\lambda t} e^{i\mu t} = e^{\lambda t}(cos(\mu t) + isin(\mu t))$
+    $y_2(t) = e^{\lambda t} e^{-i\mu t} = e^{\lambda t}(cos(\mu t) - isin(\mu t))$
+\end{center}
+
+We know that, given two solutions are "nice enough", any solution can be written as:
+
+\begin{center}
+$y(t) = c_1 y_1 (t) + c_2 y_2(t)$
+\end{center}
+
+We can ignore constants for now, so 
+
+\begin{center}
+    $y(t) = y_1(t) + y_2(t)$ \\
+    $y_1(t) + y_2(t) = e^{\lambda t}cos(\mu t) + e^{\lambda t} i sin(\mu t) + e^{\lambda t} cos(\mu t) - e^{\lambda t}isin(\mu t)$ \\
+    $y_1(t) + y_2(t) = e^{\lambda t}cos(\mu t) + e^{\lambda t} cos(\mu t)$  \\
+    $y_1(t) + y_2(t) = 2(e^{\lambda t} cos(\mu t))$ 
+\end{center}
+
+Now, we can assume the constants, $c_1$ and $c_2$, are $\frac{1}{2}$, which means
+
+\begin{center}
+    $\frac{1}{2}y_1(t) + \frac{1}{2}y_2(t) = (e^{\lambda t} cos(\mu t))$ 
+\end{center}
+
+\textbf{main idea}
+
+We can say, if the roots of the characteristic equation happens to be $r_{1,2} = \lambda \pm \mu i$, the solution to the differential equation is:
+
+\begin{center}
+    $y(t) = c_1 e^{\lambda t}cos(\mu t) + c_2 e^{\lambda t}sin(\mu t)$
+\end{center}
+
+\subsubsection{Example}
+
+Solve the following IVP:
+
+\begin{center}
+    $y'' - 4y' + 9y = 0$, where $y(0) = 0$ and $y'(0) = -8$
+\end{center}
+
+our characteristic equation is $r^2 - 4r + 9 = 0$. There's no easy way to solve this, so we need to use the quadratic formula.
+
+\begin{center}
+    $r = \frac{-b \pm \sqrt{b^2 -4ac}}{2a}$
+\end{center}
+
+Where $a = 1$, $b = -4$ and $c = 9$, which we can plug in:
+
+\begin{center}
+    $r = \frac{4 \pm \sqrt{-4^2 -4(1)(9)}}{2(1)}$, which simplifies to: \\
+    $r = 2 \pm \sqrt{5}i$
+\end{center}
+
+This resembles our complex root equation, $\lambda \pm \sqrt{\mu}i$, where $\lambda = 2$ and $\mu = 5$. We can plug these variables into our equation
+
+\begin{center}
+    $y(t) = c_1 e^{2 t}cos(\sqrt{5} t) + c_2 e^{2 t}sin(\sqrt{5} t)$
+\end{center}
+
+we can now think about our first initial condition, $y(0) = 0$
+
+
+\begin{center}
+    $0 = c_1 e^{2(0)}cos(\sqrt{5} (0)) + c_2 e^{2 (0)}sin(\sqrt{5} (0))$ \\
+    $0 = c_1 \times 1$ \\
+    $c_1 = 0$
+\end{center}
+
+this cancels out the first part, giving us:
+
+\begin{center}
+    $y(t) = c_2 e^{2 t}sin(\sqrt{5} t)$
+\end{center}
+
+now, we need to find the derivative, which is done using the product rule:
+
+\begin{center}
+    $y'(t) = c_2 e^{2t} \sqrt{5}cos(\sqrt{5} t) + 1c_2 e^{2t} sin(\sqrt{5} t)$
+\end{center}
+
+Here, we can use the initial condition, $y'(0) = -8$
+
+\begin{center}
+    $-8 = c_2 e^{2(0)} \sqrt{5}cos(\sqrt{5} (0)) + 1c_2 e^{2(0)} sin(\sqrt{5} (0))$ \\
+    $-8 = c_2\sqrt{5}$ \\
+    $c_2 = -\frac{8}{\sqrt{5}}$
+\end{center}
+
+Therefore, our solution is:
+
+\begin{center}
+    $y(t) = -\frac{8}{\sqrt{5}} e^{2 t}sin(\sqrt{5} t)$
+\end{center}
+
+\subsection{Repeated Roots}
+\subsubsection{Introduction}
+Here, if the roots are the same, or $r_1 = r_2 = r$, we can say the general solution will be $y(t) = c_1 e^{rt} + c_2 te^{rt}$
+
+\subsubsection{Example}
+
+Solve the following IVP:
+
+\begin{center}
+    $y'' - 4y' + 4y = 0$, where $y(0) = 12$ and $y'(0) = -3$
+\end{center}
+
+We can get the characteristic equation
+
+\begin{center}
+    $r^2 - 4r + 4 = 0$ \\
+    $(r - 2)(r - 2) = 0$ \\
+    $r_1 = r_2 = 2$
+\end{center}
+
+We can see that this falls under the Repeated root, therefore, we can plug r into the general solution:
+
+\begin{center}
+    $y(t) = c_1 e^{2t} + c_2 te^{2t}$
+\end{center}
+
+Now, we can solve for the constants, first using $y(0) = 12$:
+
+\begin{center}
+    $12 = c_1 e^{2(0)} + c_2 (0)e^{2(0)}$ \\
+    $12 = c_1$
+\end{center}
+
+We can now find the derivative of $y(t)$, and finde $c_2$ with $y'(0) = -3$
+
+\begin{center}
+    $y(t) = 12 e^{2t} + c_2 te^{2t}$ \\
+    $y'(t) = 24 e^{2t} + c_2 e^{2t} + 2c_2te^{2t}$ (used product rule) \\
+    $-3 = 24 e^{2(0)} + c_2 e^{2(0)} + 2c_2(0)e^{2(0)}$  \\
+    $-3 = 24 + c_2$ \\
+    $-27 = c_2$
+\end{center}
+
+
+Therefore, our solution is $y(t) = 12 e^{2t} - 27 te^{2t}$
+
 \end{document}
 
