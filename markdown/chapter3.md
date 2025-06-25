@@ -74,18 +74,17 @@
 ## Moving from Bootloader to kernel
 
 - When the bootloader gives control to the kernel, it transfer some information:
-    - machine number: to inform the kernel to identify the type of SoC
-    - details about the hardware, like size of the ram, and clock speed.
-    - kernel command line: a string that controls the behavior of linux
-    - optional features like the location and size of the device tree and initramfs.
+    - machine number: defines SoC for devices that don't support device trees
+    - details about hardware (ram size, clock speed, etc.)
+    - kernel command line (plain ascii string defining kernel behavior.)
+    - Optionally, location of Device Tree and Initramfs.
 
-- You can't pass a lot of information from the bootloader, and the kernel will either have to figure it out during runtime, or the details need to be hardcoded into the kernel as **platform data**
+- The rest is figured out by the kernel during runtime.≥
 
 ## Device Trees
 
 - A device tree provides a flexible way to define the hardware components of a computer system.
 - The tree is loaded by the bootloader and passed to the kernel.
-    - The programmer can opt to bundle the device tree with the kernel image itself.
 
 ```cs
 /dts-v1/;
@@ -109,49 +108,17 @@
     };
 };
 ```
-- The device tree represents a computer system with components joined together into a tree like heirarchy.
-- the `/` represents the root node, and the subsequent nodes representing the hardware of the system.
 
-- In this example, we have a device containing cpus and memory nodes.
-    - Within the cpus, we have a single cpu node, `cpu@0`.
-
-- By convention, you have `@0`, or whatever number to differentiate identical components.
-
-- The cpu and root nodes have a `compatible` property, which the kernel uses to find a matching device driver
-
-## Device Trees - Reg Proporties
-
-- The memory and cpu nodes also have a `reg` property.
-- The reg refers to a range of units in a register space.
-    - The reg property consists of two values which represents the start address and the length of the range.
+## Deciphering Device Tree
 
 ```cs
-reg = <0x80000000 0x20000000>; /* 512 MB */
-```
-
-- In this example, we have a single bank of memory starting at address 0x80000000, and is 0x20000000 bytes long.
-
-- If you have a 64 bit address, you need two sells, for each address range.
-
-```cs
-/ {
-    #address-cells = <2>;
-    #size-cells = <2>;
-    memory@80000000 {
-        device_type = "memory";
-        reg = <0x00000000 0x80000000 0 0x80000000>;
-    };
-};
-```
-- Here, we define the number of cells in the address cell and size cell.
-- `0x00000000 0x8000000`tells us our address begins at`0x000000008000000`.
-- `0 0x80000000` tells us our memory size is `0x0000000080000000` bytes long.
-
-```cs
-// ...
+/dts-v1/;
+/{ //root of our device tree
+    model = "TI AM335x BeagleBone";
+    compatible = "ti,am33xx";
     #address-cells = <1>;
     #size-cells = <1>;
-    cpus {
+    cpus { // cpu node of system
         #address-cells = <1>;
         #size-cells = <0>;
         cpu@0 {
@@ -160,39 +127,122 @@ reg = <0x80000000 0x20000000>; /* 512 MB */
             reg = <0>;
         };
     };
-// ...
+    memory@0x80000000 { // memory node of system
+        device_type = "memory";
+        reg = <0x80000000 0x20000000>; /* 512 MB */
+    };
+};
 ```
-- In our example, we can see the reg as well.
-    - cpu's don't have memory addresses, but we can uniquely identify them. For instance, we may want to address multicore processors with 0, 1, etc.
+
+- The device tree starts with a root node, defined as `\`
+- the root has two nodes, `cpus` and `memory`
+- `cpu@0` is the name of the cpu, and an address that distinguishes the node from others of the same type.
+- within the cpu, the `compatible` property is for matching devices with device drivers.
+
+## Device tree - compatible property
+
+```cs
+cpus { // cpu node of system
+        #address-cells = <1>;
+        #size-cells = <0>;
+        cpu@0 {
+            compatible = "arm,cortex-a8";
+            device_type = "cpu";
+            reg = <0>;
+        };
+    };
+```
+
+- This property is used by the kernel to find a matching device driver.
+- The kernel will compare the string defined by compatible with the string exported by the device driver using `of_device_id`
+
+
+## Device Trees - Reg Proporties
+
+```cs
+reg = <0x80000000 0x20000000>; /* 512 MB */
+```
+
+* The `reg` property defines a memory-mapped range: base address (`0x80000000`) and size (`0x20000000` bytes).
+* By default, each value is 32 bits. To use 64-bit addresses or sizes, increase the number of cells:
+
+```cs
+/ {
+    #address-cells = <2>;
+    #size-cells = <2>;
+    memory@80000000 {
+        device_type = "memory";
+        reg = <0x00000000 0x80000000 0x00000000 0x80000000>; // 2GB at 0x80000000
+    };
+};
+```
+
+* `#address-cells` and `#size-cells` specify how many 32-bit cells represent addresses and sizes.
+
+```cs
+cpus {
+    #address-cells = <1>;
+    #size-cells = <0>;
+    cpu@0 {
+        compatible = "arm,cortex-a8";
+        device_type = "cpu";
+        reg = <0>; // Logical CPU ID
+    };
+};
+```
+
+* CPUs don't have memory addresses, but `reg` uniquely identifies them (e.g., by core ID for SMP systems).
 
 
 ## Device Trees - Labels and Interrupts, phandles
 
-- We can also connect devices to interrupt handlers, clock sources, and voltage regulators.
-    - These type of connections are known as **phandles**
+* Device trees describe more than just memory hierarchy — components may also connect to:
 
-```cs
-/dts-v1/;
-{
-    intc: interrupt-controller@48200000 {
-        compatible = "ti,am33xx-intc";
-        interrupt-controller;
-        #interrupt-cells = <1>;
-        reg = <0x48200000 0x1000>;
-    };
-    lcdc: lcdc@4830e000 {
-        compatible = "ti,am33xx-tilcdc";
-        reg = <0x4830e000 0x1000>;
-        interrupt-parent = <&intc>;
-        interrupts = <36>;
-        ti,hwmods = "lcdc";
-        status = "disabled";
-    };
+  * Interrupt controllers
+  * Clocks
+  * Voltage regulators
+
+
+### Labels (phandles)
+
+* A **label** (like `intc:` or `lcdc:`) can be used to reference a node from other nodes.
+* When compiled, labels become **phandles** (unique numerical identifiers).
+* Labels are useful for linking nodes, e.g., to define interrupt relationships.
+
+
+### Interrupt Controller Example
+
+```dts
+intc: interrupt-controller@48200000 {
+    compatible = "ti,am33xx-intc";
+    interrupt-controller;
+    #interrupt-cells = <1>;
+    reg = <0x48200000 0x1000>;
 };
 ```
-- Here, we have a interrupt controller.
-    - The interrupt-cells identifies what type of interrupt does it handle, an "interrupt property"
-- the reg defines where the handler is, and it's size.
+
+* `intc:` is the **label** for this node.
+* `interrupt-controller` marks this node as an interrupt controller.
+* `#interrupt-cells = <1>`: One cell is used to describe each interrupt (just IRQ number in this case).
+* `reg`: Physical address and size of the controller.
+
+### Device Connected to Interrupt Controller
+
+```dts
+lcdc: lcdc@4830e000 {
+    compatible = "ti,am33xx-tilcdc";
+    reg = <0x4830e000 0x1000>;
+    interrupt-parent = <&intc>;
+    interrupts = <36>;
+    ti,hwmods = "lcdc";
+    status = "disabled";
+};
+```
+
+* `lcdc:` is the label for the LCD controller.
+* `interrupt-parent = <&intc>;` connects this device to the `intc` interrupt controller.
+* `interrupts = <36>;` means this device generates IRQ number 36.
+* The `compatible`, `reg`, and `status` properties describe the device normally.
 
 
 ## Device Tree - Include Files
