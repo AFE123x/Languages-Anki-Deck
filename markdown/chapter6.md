@@ -1,85 +1,133 @@
-# 6. Selecting a build system
+# 6. Selecting a Build System
 
 ## What is a build system
 
-- One approach to creating a system is known as the RYO (Roll your own) process.
-    - This gives you full control of the system, tailoring it to whatever you want.
+- A build system automates the process of building the system.
+- The build system will build, from upstream source code: 
+    - toolchain
+    - bootloader
+    - kernel
+    - root filesystem
 
-- For most cases, the above approach is a waste of time.
-- Instead of **ryo**, you can use a **build system**.
+- It allows you to modify certain aspects, like packages, filesystem profiles, open source licenses.
 
-- The build system will be able to build some or all of the following:
-    - Toolchain
-    - Bootloader
-    - Kernel
-    - Root Filesystem
+## Customizing Buildroot - Adding your own code
 
-- You can also:
-    - Add your own packages containing applications and kernel changes.
-    - Select various root filesystem profiles:
-        - large/small
-        - graphics/no graphics
-    - Track which open source licenses are used by various pacages
-    - Have a user friendly user interface.
+- There are two approaches to adding your own software:
+    - build the binary separately, then roll it into the final system as an **overlay**.
+    - create a buildroot package that can be selected from the menu.
 
-## Package formats and package managers
+## Customizing buildroot - Overlays
 
-- Most linux distributions already contain binaries (pre-compiled programs)
-    - They can be in RPM or DEB format
-    - RPM is the red hat package: used by distros like fedora
-    - DEB is the debian type package, used by mint 
+- An overlay is a directory structure copied on top of the buildroot rootfs at a later stage in the build process.
+- It contains executables, libraries, other things you may want.
+    - These binaries should be compile with the same tool chain as buildroot.;
 
-## Buildroot
+- You'd easily compile the binary, using the cross compiler
+- afterward, put the binary into a staging area.
+- You can then set BR2_ROOTFS_OVERLAY to the path of the overlay.
 
-- Buildroot builds the toolchain, bootloader, kernel and root filesystem.
-    - As the principle build tool, it uses **make**
+## Customizing Buildroot - Adding package
 
-## Using buildroot
+- Buildroot packages are in the `pacakge` directory.
+- Each will have 2 files:
+    - `Config.in`, which contains the snippit of KConfig code needed to make package visible in configuration menu.
+    - `<packagefile.mk>`, which is a makefile.
 
-- To use buildroot, you need to clone, then make
+- There's no actual code, rather, it contains instructions on downloading the tarball, or doing git pull to obtain the upstream source. 
 
-```bash
-$ git clone git://git.buildroot.net/buildroot -b 2017.02.1
-$ cd buildroot
-$ cd buildroot
-$ make qemu_arm_versatile_defconfig # depends on what you're build for
-$ make
-```
+- you can look at sample packages, get an idea of what it looks like.
 
-## Overlays
+## License Compliance
 
-- let's say you have another program you made, and would like to add it over the system.
-- There'll be a directory known as `overlay` which will have additional code you can build.
-- Another option is to add the program to the Kconfig.
-
-## Adding package to Kconfig
-
-- You can create the `package/helloworld/` subdirectory with a configuration file, `config.in`.
-
-```cs
-config BR2_PACKAGE_HELLOWORLD
-    bool "helloworld"
-    help
-        A friendly program that prints hello world.
-```
-- The first line must be `BR2_PACKAGE_<uppercase package name>`.
-
-- Afterwards, you need to add a the respective makefile, `package/helloworld/helloworld.mk`, to suppely the data needed by buildroot
-
-```cs
-HELLOWORLD_VERSION = 1.0.0
-HELLOWORLD_SITE = /home/chris/MELP/helloworld
-HELLOWORLD_SITE_METHOD = local
-define HELLOWORLD_BUILD_CMDS
-    $(MAKE) CC="$(TARGET_CC)" LD="$(TARGET_LD)" -C $(@D) all
-endef
-define HELLOWORLD_INSTALL_TARGET_CMDS
-    $(INSTALL) -D -m 0755 $(@D)/helloworld $(TARGET_DIR)/usr/bin/helloworld
-endef
-
-$(eval $(generic-package))
-```
+- Since build-root is open source, you probably want to check out the licenses of the packages you wanna use. 
+- Buildroot offers a `make legal-info` command which compiles license information.
 
 ## Yocto Project
 
-- The Yocto project is a more complex version of build. It can generate the entire linux distribution for you. 
+- The Yocto project is a more complex version of buildroot
+- Yocto will have recipes similar to buildroot but:
+    - uses python and shellscript
+    - uses a task scheduler called bitbake.
+
+## Yocto Project - Configuration
+
+- Once you clone yocto, you nede to configure it.
+- First, you'll need to setup the environment, using `source oe-init-build-env`
+
+- there are also many config files, in `conf/`:
+    - `local.conf`: specifies specifications of device.
+    - `bblayers.conf`: contains path of "meta layers"
+    - `templateconf.cfg`: contains name of directory with various conf files.
+
+## Yocto Project - Building
+
+- Once you finish configuring, you can build the system with `bitbake`
+- Here, you specify what root filesystem you want to create:
+    - `core-image-minimal`: minimal console based system for testing.
+    - `core-image-minimal-initramfs`: similar to minimal, but built as ramdisk
+    - `core-image-x11`: basic image with support for graphics via X11 server and xterminal terminal app.
+    - `core-image-sato`: full graphical system.
+
+## Yocto Project - Layers
+
+- Yocto structures metadata into layers.
+- each layer will start with `meta`.
+
+- The core layers include:
+    - `meta`: modified OpenEmbedded core.
+    - `meta-poky`: metadata for poky distribution
+    - `meta-yocto-bsp` contains board support packages for machine.
+
+- `bblayers.conf` contains the list of layers bitbake searches for recipes.
+
+- You can add new layers to extend Yocto's functionality.
+- for example, `meta-qt5` is a layer containing the qt5 libraries.
+
+- Each meta layer will have a folder.
+- You can configure it in the `conf/layer.conf` folder.
+- You can generate meta layers using the `yocto-layer` script.
+
+## Yocto Project layers - adding layer
+
+- You can add a layer using `bitbake-layers`
+
+```bash
+$ bitbake-layers add-layer <path-to-layer-directory>
+```
+
+- You can then list out the layer using `show-layers`
+
+```bash
+$ bitbake-layer show-layer
+layer path priority
+==========================================================
+meta /home/chris/poky/meta 5
+meta-yocto /home/chris/poky/meta-yocto 5
+meta-yocto-bsp /home/chris/poky/meta-poky-bsp 5
+meta-nova /home/chris/poky/meta-nova 6
+```
+
+## Yocto Project - Bitbake and recipes
+
+- Bitbake will contain metadata of varying types:
+    - **recipes**: contain information about how to get and build software
+    - **append**: this allows some details of a recipe to be overridden or extended.
+    - **include**: information that's common to several recipes, allowing them to share information.
+    - **classes**: contains common build information. Recipes can inherit them.
+    - **configuration**: Define various configuration variables.
+
+## Yocto Project - Recipes
+
+- A recipe is a collection of tasks written in python and shell script.
+- Tasks include:
+    - `do_fetch`
+    - `do_unpack`
+    - `do_patch`
+    - `do_configure`
+    - `do_compile`
+    - `do_install`
+
+you can get a list of tasks for a recipe using `bitbake -c <task> [recipe]`
+
+
