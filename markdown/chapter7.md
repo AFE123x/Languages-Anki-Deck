@@ -295,3 +295,210 @@ static struct mtd_partition omap3beagle_nand_partitions[] = {
     - in the block device driver
     - in the device controller.
     
+## Filesystems for NOR and NAND flash memory
+
+- You need a filesystem that has an understanding of the underlying technologies of the raw flash storage chips.
+
+- There are three filesystems for this:
+    - `JFFS2 (Journaling Flash File System 2)`: First flash file system used for linux. infamously slow during mount.
+    - `YAFFS2 (Yet another flash file system 2)`: Similar to JFFS2, but specifically for NAND flash memory.
+    - `UBIFS (Unsorted Block Image File System)`: Works in conjunction with UBI block driver, creating a realiable file system.
+        - Greate option for NOR and NAND, and offers better performance over `JFFS2` and `YAFFS2`
+
+
+<!-- ## JFFS2 - Intro, nodes, open blocks
+
+- The **Journal Flash File System** was the original file system linux used for flash devices.
+- It uses MTD to access flash memory.
+
+- In log based filesystems like JFFS2, changes are written sequentially as nodes to flash memory.
+    - Nodes can contain changes made to a directory (names of file created/deleted), or changes to file data.
+    - Nodes can get outdated by subsequent nodes.
+
+
+- JFFS2 breaks erase blocks into three parts:
+    - **free**: Contains no nodes at all.
+    - **clean**: Contains only valid nodes
+    - **dirty**: contains at least one obsolete node.
+
+- At any point in time, only one block is receiving updates, which is known as the **open block**.
+    - This means, when the system loses power, the only storage lost is the last write to the open block.
+    - Nodes are also compressed as they're written, which increases the storage capacity.
+
+- when the number of free blocks falls under a certain threadhold, the **garbage holder thread** will scan for dirty blocks, and copy them to the free nodes.
+    - this thread also provides a crude form of wear leveling.
+
+- JFFS2 uses a write-through cache, meaning writes are written to the flash memory synchronously. -->
+
+## 🔹 What is JFFS2?
+
+* **JFFS2** stands for **Journaling Flash File System, version 2**.
+* It was the first flash-optimized filesystem widely used in Linux.
+* It uses the **MTD subsystem** to access raw flash memory.
+
+
+## 🔹 How does JFFS2 store data?
+
+* JFFS2 is a **log-structured filesystem**:
+
+  * All changes (data or metadata) are written **sequentially** as **nodes**.
+  * It never overwrites existing data — new data creates new nodes.
+  * Older nodes become **obsolete** when updated.
+
+## 🔹 What are Nodes?
+
+* A **node** is a compressed record written to flash.
+* Two main types:
+
+  * **Inode nodes**: store file metadata or file data chunks.
+  * **Dirent nodes**: track file or directory names (created/deleted).
+* Nodes are **compressed** before writing to save space.
+
+## 🔹 Block States in JFFS2
+
+Each **erase block** (hardware unit of flash) is classified as:
+
+* **Free**: No nodes stored (fully erased).
+* **Clean**: Contains only **valid** (non-obsolete) nodes.
+* **Dirty**: Contains at least one **obsolete** node.
+
+## 🔹 JFFS2 - Open Block
+
+* Only **one erase block** is actively being written to: the **open block**.
+* If the system crashes, only data in the last write to the open block may be lost.
+* This design limits potential corruption to a small window.
+
+## 🔹 Garbage Collection
+
+* When the number of **free blocks** drops below a threshold:
+
+  * A **garbage collector thread** activates.
+  * It:
+
+    * Scans **dirty blocks**.
+    * Copies valid nodes to the **open block**.
+    * Erases dirty blocks to make them **free** again.
+* This process also helps with **wear leveling** by spreading writes across blocks.
+
+
+## 🔹 Write Behavior
+
+* JFFS2 uses a **write-through cache**:
+
+  * Writes are written **immediately** and **synchronously** to flash.
+  * This improves reliability (less risk of loss on crash).
+
+
+## JFFS2 - Summary nodes 
+
+- There's a huge disadvantage to JFFS2: Since there's no on-chip index, directory structures need to be deduced at mount time.
+- This requires reading the entire log from start to finish, which takes time proportional to the size of the partition.
+- To deal with this, linux introduced the **summary node**.
+- Summary nodes are wrwitten at the end of open erase blocks before it's closed.
+- now, at mount time, the system can read from these summary nodes to gain the information needed for the mount time scan.
+
+## JFFS2 - Clean markers
+
+- Clean Block Identification: JFFS2 uses clean markers to differentiate between erased blocks and blocks written with 1’s.
+- Clean Marker Location: Clean markers are written to the beginning of the block or the OOB area of the first page.
+- Clean Block Requirement: The presence of a clean marker indicates a clean block.
+
+## YAFFS2
+
+- YAFFS2 is **Yet Another File System 2**, which was meant to specifically handle NAND flash.
+- It's follows the similar design principles as JFFS2, but deviates, allowing for:
+    - faster mount time.
+    - simpler and faster garbage collection
+    - no compression, speeding up reads and writes at the expense of storage.
+
+## UBI Layer, introduction, MTD partitions
+
+### Introduction
+
+- UBI is the **Unsorted Block Image.**
+- The UBI Driver is a volume manager for flash memory that takes care of bad block handling and wear leveling.
+- UBI provides a idealized, reliable vied of a flash chip by mapping **physical erase blocks (PEB)** to **logical erase blocks (LEB)**
+    - Bad blocks aren't mapped to LEBs, so they're never used.
+- The UBI keep strack of how many time each PEB has in the header of the LEB, so each PEB is erased the same number of times.
+
+### MTD Partition
+
+- UBI can divide a MTD partition into a number of UBI volumes
+
+- Why is this helpful:
+    - Let's say we have two file systems, one static filesystem (rootfs for example), and a dynamic one constantly changing.
+    - Putting them in separate MTD partitions wouldn't be logical, since there'd be the uneven wear problem.
+    - If we put them in two logically separate UBI volumes with one MTD partition, we can even wear.
+
+- This fulfills two requirements of the flash translation layer: wear leveling and bad block handling.
+
+
+## UBIFS
+
+- UBIFS is uses UBI volumes to create a robust filesystem.
+- It adds suballocation and garbage collection to create a complete flash translation layer
+- Unlike JFFS2 and YAFFS2, it stores the index information on chip, so mounting is fast.
+- UBIFS has writeback caching like with normal disk filesystems.
+
+## File Systems for managed flash
+
+- We know that managed flash technologies, like eMMC, can use any normal disk filesystem, but a normal disk fs will not consider disk writes
+- We want o special file system that can reduce disk writes and has a fast restart after an uscheduled shutdown.
+
+## Flashbench utility
+
+- Flashbench is a tool used to figure out the erase block size and page size by observing the behavior of the chip/card.
+
+
+## Discard and Trim
+
+- Usually, when you delete a file, Only the modified directory node is written to storage, while the file’s contents remain unchanged.
+This poses an issue: The layer in the disk controller doesn’t know the sectors are no longer used, leading to copying stale data.
+
+- Recently, transactions that pass information about deleted sectors have boon passed down to the disk controller, improving the situation.
+- The SCSI and SATA specifications have a **TRIM** command
+    - MMC has a similar command called **ERASE**.
+- Linux has this feature, calling it **discard**
+
+- you can check the block system queue parameters in tho sysfs queue file of the block device.
+
+## Ext4 
+
+- EXT4 is the Extended Filesystem 4
+- It's a stable and well tested journaling fs, so it has a journal that makes recovery from an unscheduled shutdown fast and painless.
+
+## F2FS
+
+- F2FS is the Flash Friendly File System
+- This is a log structured filesystem made for managed flash devices.
+- F2FS accounts the page and erase block size, and tries to align data on these boundaries.
+- It's shows an improvement over ext4.
+
+## fat16/32
+
+- FAT16 and FAT32 are old microsoft filesystems.
+- Some boot roms require a FAT partition for second stage bootloaders.
+- For anything else, the FAT format isn't ideal for storing files, as it can cause corruption, and makes poor use of storage space.
+
+## Read Only compressed filesystems
+
+- If you know you'll never modify the files in a filesystem, you're better off using a **read only** filesystem.
+- This is better because you can accomplish better compression ratios.
+
+- Example FS:
+    - **romfs**
+    - **cramfs**
+    - **squashfs**
+
+
+## squashfs
+
+- squashfs is a readonly filesystem, replacing cramfs.
+- squashfs isn't bad-block aware, so you'll need to use reliable flash memory like NOR flash.
+- You could use NAND, but you need to use UBI to create a reliable MTD.
+
+## temporary filesystems
+
+- There are some files that have no significance after reboot.
+- You can use a temporary file system, or **tmpfs**, for this.
+- It's virtual, so it won't save on your disk, but ram instad.

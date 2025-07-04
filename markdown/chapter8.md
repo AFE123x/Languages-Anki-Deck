@@ -1,133 +1,123 @@
-# 8: Reading and Writing Files
+# 8. Updating Software in the Field
 
-## Files and File paths
+## What would you want to update? Obstacles
 
-- A file has two properties:
-    - Filename: Written in one word.
-    - path: Specificies the location of file on computer.
+- You'd probably want to update the following:
+    - bootloader (hardest to update, least frequently updated)
+    - kernel
+    - root filesystem
+    - system applications (easiest to update, most frequently updated)
+    - device specific data.
 
-## back/forward slash on Windows vs. OSX/Linux
+## Basics of software updates consideration
 
-- Windows uses `\` and linux/macos uses `/`.
-- It's ideal for your program to differentiate between the two.
-- To do this, you can use `os.path.join()`, which will concatenate the values into it's file path.
+- We want to software update mechanism to be:
+    - robust: An update shouldn't make a device unusable
+    - fail-safe, so there's a fall back mode if all else fails.
+    - secure, to prevent device from being hijacked by people installing unauthorized updates.
 
-```py
-import os
-print(os.path.join('usr','bin','ls')) # usr\\bin\\spam on windows
-filename = 'accounts.txt'
-print(os.path.join('C:\\Users\\asweigart', filename)) # C:\Users\asweigart\accounts.txt on windows
-```
+## System updates - atomicity
 
-## Current Working Directory, changing directory
+- Updates should be atomic: there should be no stage where only part of the system is update while others aren't.
+- The full update shouldn't be interrupted.
 
-- To get the current working directory, you can use `os.getcwd()`
-- To change directories, you can `os.chdir()`
-```py
-import os
-print(os.getcwd()) # /Users/arunfelix/Documents/ on unix
-os.chdir(os.path.join(os.getcwd(),'school'))
-print(os.getcwd()) # /Users/arunfelix/Documents/school on unix
-```
+- To achieve this, you need to install the update alongside the running system, then switch from the old system to new system.
 
-## Creating new folders
+## System updates - approaches to atomicity
 
-- To create a new folder, you'd use `os.makedirs()`
-- It will recursively create the folders needed in order for the path to exist
+- There are two approaches to achieving atomicity:
+    - have two copies of the root fs and other components (symmetric image update or A/B image update)
+    - have two or more copies of the rootfs is different subdirectories of the system partition, then use **chroot** to select one of them (known as **atomic file update**)
 
-```py
-import os
-os.mkdir(os.path.join(os.getcwd(),'pa2/part1'))
-```
+## System updates - fail-safe, points to failure
 
-## `os.path` module
+### Fail safe - ideals
+- The next problem to consider, recovering from an update that was installed correctly, but contains code that stops the system from booting.
+    - We'd want to system to solve this and revert to a previous working image.
 
-- The os.path module has many helpful functions for file paths:
+### Fail safe - points of failure
 
-| function | description |
-| --- | --- |
-| `os.path.abspath(path)` | Will create an absolute path given a filename path |
-| `os.path.isabs(path)` | Will check if path is an absolute path |
-| `os.path.relpath(path,start)` | will give the relative path from the `start` path `path`. If start isn't providing, current directory is used |
-| `os.path.dirname(path)` | give the dirname before the base name |
-| `os.path.split(path)` | similar to dir name, but will separate the basename and dirname. |
+- kernel panic: Caused by possible bug in kernel driver, or unable to run init system.
+    - in this case, you'd want to reboot the system after a few seconds of a panic, which can be set in the kernel configuration, or in the kernel command line.
+- Oops (fatal kernel error): Here, you can make the system panic on an oops.
+    - This can be set on the command line or in the kernel config.
+- kernel launches init successfully, but main application fails to run:
+    - In this case, you'd want a watchdog.
+    - A watchdog is a timer that's frequently reset. If it doesn't reset within a certain time period, the system is restarted.
+- bootloops: if the kernel panics or the watchdog times out every time, the system will reoot continueally.
+    - There'll usually be code in the boot loader to detect this, and revert to a previously working version.
+    - uboot has a few variables, like `bootcount`, `bootlimit`, `altbootcmd`
 
-## Getting file size and folder content
+## uboot - boot loop related variables, how to reset boot count
 
-- you can get the size of a file using `os.path.getsize(path)`, returning the number of bytes.
-- you can use `os.listdir(path)` to list all the files in a directory.
-    - returns an array of files/directories in path.
+- to handle a bootloop, uboot has three variables:
+    - `bootcount`: counted every time the processor boots, reset when system is successfully booted
+    - `bootlimit`: a limit to how many times the kernel can boot.
+    - `altbootcmd`: if the kernel fails to boot, and the bootcount exceeds bootlimit, the `altbootcmd` command is used, or enters a recovery mode.
 
-## checking path validity
+- To reset the boot count, we can use U-boot utilities that will be able to access uboot environment variables at runtime.
+    - `fw-printenv` prints value of uboot variable.
+    - `fw_setenv` sets the value of uboot variable.
 
-- You can check if a path exists using `os.path.exists(path)`
-- You can check if the path is a file using `os.path.isfile(path)`
-- You can check if path is a directory using `os.path.isdir(path)`
+- The bootloader will create a configuration file, `/etc/fw_env.config` containing the location and size of the uboot environment.
 
-## Opening files
+- To prevent unecessary writes to flash, you can set the `upgrade_available` to only increment `bootcount` if `upgrade_available` is set to 1.
 
-- You can open a file using the `open()` function.
+## Making updates secure
 
-```py
-fd = open("/usr/bin/ls")
-```
+- you want to implement an update mechanism to provide a reliable source to install security patches and other features.
+- We don't want others to use the same mechanism to install unauthorized versions of software.
 
-## reading from file
+- One vulnerability are fake updates.
+    - To prevent this, we need to authenicate update server before starting the download.
+    - We also need a secure transfer channel, like HTTPS, to guard against tamping with the download stream.
 
-- Once you open the file, you can read it:
-    - with `.read()` if you want to read everything
-    - with `.readlines()` if you want to split it line by line.
+- Another concern is the authenticity of updates provided locally.
+- You can detect these by using secure boot protocols in the bootloader.
+- The kernel image can be signed at the factory with a digital key, so the bootloader can check the key before loading the kernel, and refuse boot if they don't match.
 
-## Writing to file
+## Symmetric Image update
 
-- You can write content to a file using write.
-- You must provide `write mode` or `append mode` permissions before writing to a file.
-    - Write mode means you can overwrite the existing file, add 'w' as arg to open
-    - Append mode means you can add text to the end of an existing file, add 'a' as arg to open.
+- This is one approach to applying software updates.
+- Here, well have two copies of the OS, labelled A and B.
+- The bootloader will have a flag, to indicate whether to boot OS image A or B.
 
-## saving variables with shelve module
+- Initially, the flag will be set to boot from A.
+- When the system updates, OS A will apply the update and overwrite B, then set the flag to boot from B.
+- Every update, the two alternate.
 
-- You can save variables even after closing a program using the shelve module.
 
-```py
-import shelve
+- This works, but has drawbacks:
+    - updating an entire filesystem, which is large, puts a strain on the network.
+        - this can be resolved by only sending the filesystem blocks that have changed.
+    - You need to keep additional storage space for a redundant copy of the root.
 
-shelfFile = shelve.open('mydata')
-cats = ['zophie','pooka','simon']
-shelfFile['cats'] = cats # will add cats variable to shelf
-selfFile.close() # save variable to file
-``` 
+## Asymmetric Image Update
 
-- Later, you can access the variables in another program.
+- This is similar to Symmetric Image update, but you'll have a minimal recovery OS solely for updating the main one.
+- When you install an update, you set the bootflag to point to the recovery OS.
+    - If the update's interrupted, the bootloader can go to the recovery OS, letting it resume the update.
 
-```py
-import shelve
-shelfFile = shelve.open('mydata')
-print(shelfFile['cats']) # ['zophie','pooka','simon']
-shelfFile.close()
-```
+- This works, but has drawbacks:
+    - when the Recovery OS runs, the device isn't operational.
 
-## Saving variables with pprint.pform() function
 
-- You can also use `pprint.pformat()` to save variables as a string.
+## Atomic File Updates
 
-```py
->>> import pprint
->>> cats = [{'name': 'Zophie', 'desc': 'chubby'}, {'name': 'Pooka', 'desc': 'fluffy'}]
->>> pprint.pformat(cats)
-"[{'desc': 'chubby', 'name': 'Zophie'}, {'desc': 'fluffy', 'name': 'Pooka'}]"
->>> fileObj = open('myCats.py', 'w')
->>> fileObj.write('cats = ' + pprint.pformat(cats) + '\n')
-83
->>> fileObj.close()
+- With this approach, you have multiple copies of the root filesystem present in multiple directories of a single filesystem.
+    - You'd use `chroot` to choose one of them at boottime
+- This will let one directory tree get updated while another one is mounted as the root directory.
+- instead of copying unchained files, you can use symlinks, which saves disk space and reduce the amount of data to be downloaded.
 
-# later
+- OSTree is an implementation of this idea.
 
->>> import myCats
->>> myCats.cats
-[{'name': 'Zophie', 'desc': 'chubby'}, {'name': 'Pooka', 'desc': 'fluffy'}]
->>> myCats.cats[0]
-{'name': 'Zophie', 'desc': 'chubby'}
->>> myCats.cats[0]['name']
-'Zophie'
-```
+## OTA Updates
+
+- These are **Over the Air** updates.
+- these can push software updates to a device or group of devices via a network.
+
+- For this to work, the client will poll the update server occasionally to check if there are any updates pending.
+
+- There are two projects that you can use:
+    - Mender in managed made
+    - hawkbit
