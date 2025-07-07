@@ -11,4 +11,14 @@
 - network: meant for transmitting and receiving network packets.
 - virtual: `/dev/random` for example.
 
-## Character Devices
+## Device Nodes
+
+- Character devices are identified in user space via a **device node**
+- Device nodes are uniquely identified with a major and minor number.
+    - major maps the device node to particular driver.
+    - minor number tells driver what interface is being accessed.
+
+## Block devices major/minor numbers
+
+- major numbers identify the device driver
+- minor numbers identify the partition.
