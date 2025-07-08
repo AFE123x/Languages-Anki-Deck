@@ -2,3 +2,4 @@ playground/
 books/
 .vscode/
 kernel/
+.DS_Store
