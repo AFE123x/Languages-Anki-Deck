@@ -113,3 +113,5 @@
 
 - given a multi core processor, you can dedicate one or more cores to only handle real time tasks.
     - aka, eliminating interrupts from a core
+
+- this is done with the `taskset` utility, or the `sched_setaffinity()` and `pthread_setaffinity_np()` function.
