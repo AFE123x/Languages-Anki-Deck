@@ -1,124 +1,46 @@
-# 2. Device Drivere Basis
+# 2. Introducing Super Loop Programming
 
-## User Space vs. Kernel Space
+## What is the super loop program? Consequences of superloops
 
-- The CPU seperates processes by priviledge levels.
-    - user apps are more restricted than the kernel.
-- Kernel space provides a higher privilidge level than user applications (giving you access to the hardware).
-- user space: restricted mode, need to use system calls to interface with device.
+- This is your classic embedded program, where you have a `while(1)` loop that never stops.
+- It's simplistic, but isn't great for a real time system.
+    - When you call a function in an order, it'll repeat in the same order. This is nice, but if one function deals with a delay, it'll affect the subsequent functions.
 
-## What is a module
-
-- You can think of a module similar to a plugin to a user software.
-- the linux lets you do plug and play the modules.
-
-## Module Dependencies
-
-- you can export symbols (functions) using the `EXPORT_SYMBOL` macro, making it available to other modules.
-
-- If you have two modules, A and B, a dependency of module B on module A means that module B is using one of the symbol exported by module A.
-
-## loading modules manually
-
-- there are two ways to load modules:
-    - insmod: simple way to load modules.
-    - depmod: it will read the modules.dep file, and add the dependencies before adding module.
-
-## loading modules via boottime
-
-- you can create a file, `/etc/module-load.d/filename`, to load modules at boot time.
-- here, you can list the modules you want to load.
-
-## unloading odules
-
-- you can unload modules via two approaches:
-
-```bash
-rmmod -f mymodule # will forcefully remove a module
-modeprobe -r mymodule # remove unused dependencies
-```
-
-## simple hello world kernel module
-
-```c
-#include<linux/init.h>
-#include<linux/module.h>
-#include<linux/kernel.h>
-
-static int __init helloworld_init(void){
-    pr_info("Hello, world!\n");
-    return 0;
-}
-
-static void __exit helloworld_exit(void){
-    pr_info("End of the world!\n");
-}
-
-module_init(helloworld_init);
-module_exit(helloworld_exit);
-MODULE_AUTHOR("Arun Felix");
-MODULE_LICENSE("GPL");
-```
-
-## `__init` and `__exit` macros
-
-- These are kernel macros that tell the linker to place the code in a dedicate section in the object file.
-
-```c
-#define __init __section(.init.text)
-#define __exit __section(.exit.text)
-
-static int __init helloworld_init(void){
-    pr_info("Hello, world!\n");
-    return 0;
-}
-
-static void __exit helloworld_exit(void){
-    pr_info("End of the world!\n");
-}
-
-```
-
-## Module information, extracting information
-
-- you'd want to provide information about the module, like the author, license, description and other things.
-
-- There are a bunch of macros:
-    - `MODULE_DESCRIPTION("description)` provides the description of the module
-    - `MODULE_AUTHOR("author")` provides the author
-    - `MODULE_LICENSE` provides the license the module uses (GPL for example).
-    - `MODULE_INFO(field_name, "information about field ")` for miscellanious things.
+- The super loop is especially problematic with polling. 
 
 
-- you can extract this information using `objectdump -d -j .modinfo`, or you can use the `modinfo`
+## Interrupts
 
-## Module licenses
+- Polling is a waste of CPU cycles, and results in a less responsive system.
+- Interrupts let you stop the main flow of the program, and execute an Interrupt Service Routine.
+- Interrupts need to be short to minimize the time of the interrupt
+    - this prevents the interrupt interrupting the interrupt.
+- You can also assign the interrupt handlers with a priority level so high priority interrupts run first.
 
-- This is important as this may restrict you from accessing certain libraries.
-    - If you don't use a GPL license, you won't be able to access symbols (other functions) from other modules exported with `EXPORT_SYMBOL_GPL()`.
+
+## Implementing interrupts with super loops
+
+- What you can do is use ISRs to set flags, which can then be checked by another part of code in the super loop.
+
+## DMA
+
+- DMA stands for **Direct Memory Access**
+
+- Instead of the CPU managing a series of CPU reads/writes, the CPU can ask the DMA controller to transfer a number of bytes from a device to memory independently.
 
 
-## Module Parameters
+## RTOS advantage over super loops
 
-- Kernel modules can also accept arguments via the `module_param()` macro
+- RTOS has two main differences compared to super loops:
+    - Each task will have its own stack
+    - you can assign priorities on tasks.
 
-```c
-#include <linux/moduleparam.h>
-// [...]
-static char *mystr = "hello";
-static int myint = 1;
-static int myarr[3] = {0, 1, 2};
-module_param(myint, int, S_IRUGO);
-module_param(mystr, charp, S_IRUGO);
-module_param_array(myarr, int,NULL, S_IWUSR|S_IRUSR); /* */
-MODULE_PARM_DESC(myint,"this is my int variable");
-MODULE_PARM_DESC(mystr,"this is my char pointer variable");
-MODULE_PARM_DESC(myarr,"this is my array of int");
-static int foo(){
-    pr_info("mystring is a string: %s\n", mystr);
-    pr_info("Array elements: %d\t%d\t%d", myarr[0], myarr[1], myarr[2]);
-    return myint;
-}
-//[...]
-```
+## Round Robin Scheduling
 
+- Round Robin is an approach of scheduling where you run a task for a fixed time slice, then switch to another task. The scheduler chooses what's next.
+
+
+## Preemptive based scheduling
+
+- A preemptive based scheduler is a scheduler that can interrupt the current running process on the CPU.
+- 
